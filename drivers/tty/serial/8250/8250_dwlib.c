@@ -271,10 +271,12 @@ void dw8250_setup_port(struct uart_port *p)
 		p->set_divisor = dw8250_set_divisor;
 	}
 
-	reg = dw8250_readl_ext(p, DW_UART_UCV);
+/*	reg = dw8250_readl_ext(p, DW_UART_UCV);
 	if (reg)
 		dev_dbg(p->dev, "Designware UART version %c.%c%c\n",
 			(reg >> 24) & 0xff, (reg >> 16) & 0xff, (reg >> 8) & 0xff);
+*/
+	dev_info(p->dev, "Designware UART version\n");
 
 	reg = dw8250_readl_ext(p, DW_UART_CPR);
 	if (!reg) {
