@@ -20,6 +20,8 @@
 #include <asm/dma-noncoherent.h>
 #include <soc/sifive/sifive_ccache.h>
 
+#include <asm/dma-noncoherent.h>
+
 #define SIFIVE_CCACHE_DIRECCFIX_LOW 0x100
 #define SIFIVE_CCACHE_DIRECCFIX_HIGH 0x104
 #define SIFIVE_CCACHE_DIRECCFIX_COUNT 0x108
@@ -50,6 +52,9 @@
 
 #define SIFIVE_CCACHE_MAX_ECCINTR 4
 #define SIFIVE_CCACHE_LINE_SIZE 64
+
+#define SIFIVE_CCACHE_FLUSH64 0x200
+#define SIFIVE_CCACHE_FLUSH64_LINE_LEN 64
 
 static void __iomem *ccache_base;
 static int g_irq[SIFIVE_CCACHE_MAX_ECCINTR];
@@ -114,6 +119,39 @@ static void ccache_config_read(void)
 	cfg = readl(ccache_base + SIFIVE_CCACHE_WAYENABLE);
 	pr_info("Index of the largest way enabled: %u\n", cfg);
 }
+
+#if IS_ENABLED(CONFIG_ARCH_ESWIN_EIC770X_SOC_FAMILY)
+static void ccache_way_enable(void)
+{
+	u32 cfg, val;
+
+	cfg = readl(ccache_base + SIFIVE_CCACHE_CONFIG);
+	val = FIELD_GET(SIFIVE_CCACHE_CONFIG_WAYS_MASK, cfg);
+	writel(val -1 , ccache_base + SIFIVE_CCACHE_WAYENABLE);
+}
+
+static void ccache_flush64_range(phys_addr_t paddr, size_t size)
+{
+	unsigned long line;
+
+	size = size + (paddr % SIFIVE_CCACHE_FLUSH64_LINE_LEN);
+	paddr = ALIGN_DOWN(paddr, SIFIVE_CCACHE_FLUSH64_LINE_LEN);
+
+	mb();	/* sync */
+
+	for (line = paddr; line < paddr + size;
+	line += SIFIVE_CCACHE_FLUSH64_LINE_LEN) {
+		writeq(line, ccache_base + SIFIVE_CCACHE_FLUSH64);
+		mb();
+	}
+}
+
+static const struct riscv_nonstd_cache_ops ccache_cmo_ops __initdata = {
+	.wback = &ccache_flush64_range,
+	.inv = &ccache_flush64_range,
+	.wback_inv = &ccache_flush64_range,
+};
+#endif
 
 static const struct of_device_id sifive_ccache_ids[] = {
 	{ .compatible = "sifive,fu540-c000-ccache" },
@@ -306,6 +344,11 @@ static int __init sifive_ccache_init(void)
 		riscv_noncoherent_register_cache_ops(&ccache_mgmt_ops);
 	}
 #endif
+
+	#if IS_ENABLED(CONFIG_ARCH_ESWIN_EIC770X_SOC_FAMILY)
+	ccache_way_enable();
+	riscv_noncoherent_register_cache_ops(&ccache_cmo_ops);
+	#endif
 
 	ccache_config_read();
 
