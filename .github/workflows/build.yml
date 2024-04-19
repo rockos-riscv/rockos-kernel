@@ -1,0 +1,72 @@
+name: eswin-kernel
+
+on:
+  push:
+  pull_request:
+  workflow_dispatch:
+  schedule:
+    - cron: "0 2 * * *"
+
+jobs:
+  build-kernel:
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - name: gcc-13
+            board: win2030
+
+    runs-on: ubuntu-22.04
+    env:
+      mainline_toolchain: https://github.com/riscv-collab/riscv-gnu-toolchain/releases/download/2024.04.12
+      mainline_toolchain_file_name: riscv64-glibc-ubuntu-22.04-gcc-nightly-2024.04.12-nightly.tar.gz
+      wget_alias: 'wget --retry-connrefused --waitretry=1 --read-timeout=20 --timeout=15 -t 0'
+      ARCH: riscv
+      KBUILD_BUILD_USER: riscv
+      KBUILD_BUILD_HOST: riscv-builder
+      KDEB_COMPRESS: xz
+      board: ${{ matrix.board }}
+      CROSS_COMPILE: riscv64-unknown-linux-gnu-
+
+    steps:
+      - name: Update Apt Cache
+        run: sudo apt update
+
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          path: kernel
+
+      - name: Install software
+        run: |
+              sudo apt install -y gdisk dosfstools g++-12-riscv64-linux-gnu build-essential \
+                                  libncurses-dev gawk flex bison openssl libssl-dev tree \
+                                  dkms libelf-dev libudev-dev libpci-dev libiberty-dev autoconf \
+                                  device-tree-compiler xz-utils devscripts ccache debhelper
+
+      - name: Compile Kernel && Install
+        run: |
+              mkdir -p artifact
+              ${wget_alias} ${mainline_toolchain}/${mainline_toolchain_file_name}
+              tar -xvf ${mainline_toolchain_file_name} -C /opt
+              export PATH="/opt/riscv/bin:$PATH"
+
+              ${CROSS_COMPILE}gcc -v
+              pushd kernel
+                export KDEB_PKGVERSION="$(make kernelversion)-$(date "+%Y.%m.%d.%H.%M")+$(git rev-parse --short HEAD)"
+                make win2030_defconfig
+                make -j$(nproc) dtbs
+                make -j$(nproc) bindeb-pkg LOCALVERSION="-${board}"
+                sudo cp -v arch/riscv/boot/dts/eswin/*.dtb ../artifact
+                sudo cp -v ../*.deb ../artifact
+              popd
+
+      - name: compress
+        run: tar -zcvf eswin-kernel-${{ matrix.name }}-${{ matrix.board }}.tar.gz artifact
+
+      - name: 'Upload Artifact'
+        uses: actions/upload-artifact@v4
+        with:
+          name: eswin-kernel-${{ matrix.name }}-${{ matrix.board }}.tar.gz
+          path: eswin-kernel-${{ matrix.name }}-${{ matrix.board }}.tar.gz
+          retention-days: 20
