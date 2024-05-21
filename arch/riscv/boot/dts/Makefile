@@ -7,5 +7,6 @@ subdir-y += sifive
 subdir-y += sophgo
 subdir-y += starfive
 subdir-y += thead
+subdir-y += eswin
 
 obj-$(CONFIG_BUILTIN_DTB) := $(addsuffix /, $(subdir-y))
