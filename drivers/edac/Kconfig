@@ -572,5 +572,11 @@ config EDAC_VERSAL
 	  Support injecting both correctable and uncorrectable errors
 	  for debugging purposes.
 
+config EDAC_ESWIN
+	tristate "Synopsys DDR Memory Controller for Eswin"
+	depends on SOC_SIFIVE
+	help
+	  Support for error detection and correction on the Synopsys DDR
+	  memory controller.
 
 endif # EDAC
