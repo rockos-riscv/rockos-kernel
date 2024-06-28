@@ -26,7 +26,7 @@
 /* If wanna enable ECC capability of DDR, should reserve highest zone of 1/8 all space for it */
 #define MEMORY_SIZE_H		0x4
 #define MEMORY_SIZE_L		0x0
-#define CMA_SIZE		0x20000000
+#define CMA_SIZE		0x80000000
 
 #include "eswin-win2030-die0-soc.dtsi"
 #include "eic7700-pinctrl.dtsi"
