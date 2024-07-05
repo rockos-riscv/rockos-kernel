@@ -190,3 +190,4 @@ obj-$(CONFIG_DRM_SPRD) += sprd/
 obj-$(CONFIG_DRM_LOONGSON) += loongson/
 obj-$(CONFIG_DRM_POWERVR) += imagination/
 obj-$(CONFIG_DRM_ESWIN) += eswin/
+obj-$(CONFIG_DRM_IMG) += img/
