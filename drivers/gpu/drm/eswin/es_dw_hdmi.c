@@ -152,6 +152,14 @@ static const struct dw_hdmi_mpll_config eswin_mpll_cfg[] = {
 		},
 	},
 	{
+		513820000,
+		{
+			{ 0x0640, 0x0005 },
+			{ 0x1658, 0x0019 },
+			{ 0x2648, 0x000f },
+		},
+	},
+	{
 		594000000,
 		{
 			{ 0x0640, 0x0005 },
@@ -194,6 +202,10 @@ static const struct dw_hdmi_curr_ctrl eswin_cur_ctr[] = {
 	{
 		297000000,
 		{ 0x3041, 0x3182, 0x3100 },
+	},
+	{
+		513820000,
+		{ 0x3080, 0x31c0, 0x3100 },
 	},
 	{
 		594000000,
