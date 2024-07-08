@@ -1699,8 +1699,12 @@
 					 <&d1_clock WIN2030_CLK_VO_PIXEL_CLK>,
 					 <&d1_clock WIN2030_CLK_VO_ACLK>,
 					 <&d1_clock WIN2030_SPLL0_FOUT1>,
-					 <&d1_clock WIN2030_MUX_U_VO_ACLK_ROOT_2MUX1_GFREE>;
-			clock-names = "cfg_clk", "pix_clk", "axi_clk", "spll0_fout1", "vo_mux";
+					 <&d1_clock WIN2030_MUX_U_VO_ACLK_ROOT_2MUX1_GFREE>,
+					 <&d1_clock WIN2030_MUX_U_VO_PIXEL_ROOT_2MUX1>,
+					 <&d1_clock WIN2030_SPLL2_FOUT2>,
+					 <&d1_clock WIN2030_VPLL_FOUT1>;
+			clock-names = "cfg_clk", "pix_clk", "axi_clk", "spll0_fout1", "vo_mux",
+						  "pix_mux", "spll2_fout2", "vpll_fout1";
 			resets = <&d1_reset VO_RST_CTRL SW_VO_AXI_RSTN>,
 					 <&d1_reset VO_RST_CTRL SW_VO_CFG_RSTN>,
 					 <&d1_reset VO_RST_CTRL SW_VO_DC_RSTN>,
