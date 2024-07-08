@@ -2549,6 +2549,9 @@ static int dw_hdmi_setup(struct dw_hdmi *hdmi,
 		dev_dbg(hdmi->dev, "CEA mode used vic=%d\n", hdmi->vic);
 	}
 
+	dev_dbg(hdmi->dev, "mode clock:%d, hdisplay:%d, htotal:%d, vdisplay:%d, vtotal:%d\n",
+			mode->clock, mode->hdisplay, mode->htotal, mode->vdisplay, mode->vtotal);
+
 	if (hdmi->plat_data->get_enc_out_encoding)
 		hdmi->hdmi_data.enc_out_encoding =
 			hdmi->plat_data->get_enc_out_encoding(data);
@@ -3370,7 +3373,7 @@ dw_hdmi_bridge_mode_valid(struct drm_bridge *bridge,
 	if (mode->clock != 594000 && mode->clock != 297000 &&
 	    mode->clock != 148500 && mode->clock != 108000 &&
 	    mode->clock != 74250 && mode->clock != 54000 &&
-	    mode->clock != 27000) {
+	    mode->clock != 27000 && mode->clock != 513820) {
 		return MODE_NOCLOCK;
 	}
 
