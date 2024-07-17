@@ -17,3 +17,4 @@ obj-y					+= tegra/
 obj-y					+= ti/
 obj-y					+= xilinx/
 obj-y					+= core.o governor.o
+obj-y					+= eswin/
