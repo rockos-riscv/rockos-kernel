@@ -509,7 +509,10 @@ static void kvm_riscv_vcpu_update_config(const unsigned long *isa)
 	if (riscv_isa_extension_available(isa, ZICBOZ))
 		henvcfg |= ENVCFG_CBZE;
 
+#ifndef CONFIG_ARCH_ESWIN_EIC770X_SOC_FAMILY
 	csr_write(CSR_HENVCFG, henvcfg);
+#endif
+
 #ifdef CONFIG_32BIT
 	csr_write(CSR_HENVCFGH, henvcfg >> 32);
 #endif
