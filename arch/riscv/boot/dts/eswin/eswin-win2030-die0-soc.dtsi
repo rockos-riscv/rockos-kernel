@@ -1946,6 +1946,7 @@
 					 <&d0_reset VO_PHYRST_CTRL SW_HDMI_PHYCTRL_RSTN>,
 					 <&d0_reset VO_PHYRST_CTRL SW_VO_HDMI_RSTN>;
 			reset-names = "prstn", "phyrstn", "rstn";
+			numa-node-id = <0>;
 
 			ports {
 				#address-cells = <1>;
@@ -1968,6 +1969,7 @@
 					    <&d0_clock WIN2030_CLK_VO_HDMI_IESMCLK>;
 				clock-names ="pclk_hdcp2", "hdcp2_clk_hdmi";
 				dma-noncoherent;
+				numa-node-id = <0>;
 		};
 
 		d0_usbdrd3_0: usb0@50480000 {
