@@ -3301,7 +3301,8 @@ static int vcmd_init(void)
 			dma_handle_d1 = dma_map_page(&platformdev_d1->dev,
 					vmalloc_to_page(vcmd_buf_mem_pool.virtual_address), 0, vcmd_buf_mem_pool.size, DMA_BIDIRECTIONAL);
 			if (dma_handle != dma_handle_d1) {
-				LOG_ERR("vdec_vcmd: dma address of vcmd buf not the same between d0 and d1\n");
+				LOG_ERR("vdec_vcmd: dma address of vcmd buf not the same between d0 and d1, 0x%llx, 0x%llx, %d\n",
+					dma_handle, dma_handle_d1, __LINE__);
 				return -1;
 			}
 		}
@@ -3338,7 +3339,8 @@ static int vcmd_init(void)
 			dma_handle_d1 = dma_map_page(&platformdev_d1->dev,
 					vmalloc_to_page(vcmd_status_buf_mem_pool.virtual_address), 0, vcmd_status_buf_mem_pool.size, DMA_BIDIRECTIONAL);
 			if (dma_handle != dma_handle_d1) {
-				LOG_ERR("vdec_vcmd: dma address of status buf not the same between d0 and d1\n");
+				LOG_ERR("vdec_vcmd: dma address of status buf not the same between d0 and d1, 0x%llx, 0x%llx, %d\n",
+					dma_handle, dma_handle_d1, __LINE__);
 				return -1;
 			}
 		}
@@ -3377,7 +3379,8 @@ static int vcmd_init(void)
 			dma_handle_d1 = dma_map_page(&platformdev_d1->dev,
 					vmalloc_to_page(vcmd_registers_mem_pool.virtual_address), 0, vcmd_registers_mem_pool.size, DMA_BIDIRECTIONAL);
 			if (dma_handle != dma_handle_d1) {
-				LOG_ERR("vdec_vcmd: dma address of registers buf not the same between d0 and d1\n");
+				LOG_ERR("vdec_vcmd: dma address of registers buf not the same between d0 and d1, 0x%llx, 0x%llx, %d\n",
+					dma_handle, dma_handle_d1, __LINE__);
 				return -1;
 			}
 		}
