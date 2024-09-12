@@ -325,6 +325,7 @@ static struct apbfilter_cfg apbfilter_cfg[MAX_SUBSYS_NUM][HW_CORE_MAX];
 
 static struct axife_cfg axife_cfg[MAX_SUBSYS_NUM];
 static int elements = 2;
+static int gdev_count = 0;
 
 #ifdef CLK_CFG
 struct clk *clk_cfg;
@@ -3074,12 +3075,13 @@ err:
  * Description     : clean up
  * Return type     : int
  */
-static void hantrodec_cleanup(void)
+static void hantrodec_cleanup(struct platform_device *pdev)
 {
 	hantrodec_t *dev = &hantrodec_data;
 	int i, n = 0;
 	volatile u8 *mmu_hwregs[MAX_SUBSYS_NUM][2];
 	int has_mmu = 0;
+	int cleanup = (gdev_count > 0) ? 0 : 1;
 
 	for (i = 0; i < MAX_SUBSYS_NUM; i++) {
 		mmu_hwregs[i][0] = dev->hwregs[i][HW_MMU];
@@ -3097,7 +3099,7 @@ static void hantrodec_cleanup(void)
 		MMUCleanup(mmu_hwregs);
 
 	if (vcmd) {
-		hantrovcmd_cleanup();
+		hantrovcmd_cleanup(pdev, cleanup);
 	} else {
 		/* reset hardware */
 		ResetAsic(dev);
@@ -3107,6 +3109,9 @@ static void hantrodec_cleanup(void)
 			if (dev->irq[n] != -1)
 				free_irq(dev->irq[n], (void *)dev);
 		}
+	}
+	if (!cleanup) {
+		return;
 	}
 	ReleaseIO();
 
@@ -3973,7 +3978,6 @@ static int hantro_vdec_probe(struct platform_device *pdev)
 {
 	int numa_id;
 	int ret, vdec_dev_num = 0;
-	static int pdev_count = 0;
 	vdec_clk_rst_t *vcrt = devm_kzalloc(&pdev->dev, sizeof(vdec_clk_rst_t), GFP_KERNEL);
 	if (!vcrt) {
 		LOG_ERR("malloc drvdata failed\n");
@@ -4046,8 +4050,8 @@ static int hantro_vdec_probe(struct platform_device *pdev)
 	}
 #endif
 
-	pdev_count++;
-	if (vdec_dev_num > pdev_count) {
+	gdev_count++;
+	if (vdec_dev_num > gdev_count) {
 		LOG_INFO("The first core loaded, waiting for another...");
 		return 0;
 	}
@@ -4090,14 +4094,18 @@ static int hantro_vdec_remove(struct platform_device *pdev)
 	vdec_clk_rst_t *vcrt;
 
 	pm_runtime_disable(&pdev->dev);
-	hantrodec_cleanup();
+
+	gdev_count--;
+	hantrodec_cleanup(pdev);
 #ifdef SUPPORT_DMA_HEAP
 	ret = win2030_tbu_power(&pdev->dev, false);
 	if (ret) {
 		LOG_ERR("vdec tbu power down failed\n");
 		return -1;
 	}
-	mutex_destroy(&dmaheap_mutex);
+	if (!gdev_count) {
+		mutex_destroy(&dmaheap_mutex);
+	}
 #endif
 	vcrt = platform_get_drvdata(pdev);
 	vdec_hardware_reset(vcrt);
