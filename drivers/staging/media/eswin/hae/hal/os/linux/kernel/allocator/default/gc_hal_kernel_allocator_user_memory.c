@@ -334,6 +334,7 @@ import_pfn_map(gckOS Os, struct device *dev, struct um_desc *um,
     int result = 0;
     size_t pageCount = 0;
 	unsigned int           data      = 0;
+
     if (!current->mm)
         return -ENOTTY;
 
@@ -370,24 +371,27 @@ import_pfn_map(gckOS Os, struct device *dev, struct um_desc *um,
         int ret = 0;
         ret = follow_pfn(vma, addr, &pfns[i]);
         if (ret < 0) {
+            /* Case maybe provides unmapped addr. */
             ret = gckOS_ReadMappedPointer(Os, (gctPOINTER)addr, &data);
             if (!ret)
                 ret = follow_pfn(vma, addr, &pfns[i]);
+
             if (ret < 0) {
-            up_read(&current_mm_mmap_sem);
-            goto err;
+                up_read(&current_mm_mmap_sem);
+                goto err;
             }
         }
 #else
         /* protect pfns[i] */
         spinlock_t  *ptl;
-        pgd_t *pgd;
+        pgd_t       *pgd;
 #if LINUX_VERSION_CODE >= KERNEL_VERSION(5, 9, 0)
-        p4d_t *p4d;
-# endif
-        pud_t *pud;
-        pmd_t *pmd;
-        pte_t *pte;
+        p4d_t       *p4d;
+#    endif
+        pud_t       *pud;
+        pmd_t       *pmd;
+        pte_t       *pte;
+
         pgd = pgd_offset(current->mm, addr);
         if (pgd_none(*pgd) || pgd_bad(*pgd))
             goto err;
@@ -419,14 +423,22 @@ import_pfn_map(gckOS Os, struct device *dev, struct um_desc *um,
             if (gcmIS_SUCCESS(gckOS_ReadMappedPointer(Os, (gctPOINTER)addr, &data)))
                 pte = pte_offset_map_lock(current->mm, pmd, addr, &ptl);
         if (!pte_present(*pte)) {
-            pte_unmap_unlock(pte, ptl);
-            goto err;
+            if (pte)
+                pte_unmap_unlock(pte, ptl);
+
+            /* Case maybe provides unmapped addr. */
+            if (gcmIS_SUCCESS(gckOS_ReadMappedPointer(Os, (gctPOINTER)addr, &data)))
+                pte = pte_offset_map_lock(current->mm, pmd, addr, &ptl);
+
+            if (!pte_present(*pte)) {
+                pte_unmap_unlock(pte, ptl);
+                goto err;
+            }
         }
         }
         pfns[i] = pte_pfn(*pte);
         pte_unmap_unlock(pte, ptl);
 #endif
-
         /* Advance to next. */
         addr += PAGE_SIZE;
     }
