@@ -2389,7 +2389,7 @@
 			compatible = "eswin,eic7x-d2d";
 			interrupt-parent = <&plic1>;
 			interrupts = <287>, <288>;
-			reg = <0x0 0x72100000 0x0 0x1000>;
+			reg = <0x0 0x72100000 0x0 0x50000>;
 			reg-names = "control";
 			numa-node-id = <1>;
 			status = "disabled";
