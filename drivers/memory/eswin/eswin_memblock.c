@@ -35,6 +35,7 @@
 
 struct mem_block eswin_rsvmem_blocks[MAX_ESWIN_RSVMEM_AREAS] = {0};
 unsigned eswin_rsvmem_block_count = 0;
+static bool disable_eswinmem = 0;
 
 phys_addr_t eswin_rsvmem_get_base(const struct mem_block *memblock)
 {
@@ -153,8 +154,22 @@ EXPORT_SYMBOL(eswin_rsvmem_for_each_block);
 #undef pr_fmt
 #define pr_fmt(fmt) fmt
 
+static int __init do_disable_eswinmem(char *str)
+{
+	disable_eswinmem = 1;
+
+	pr_notice("Disable eswin reserved memory\n");
+	return 0;
+}
+early_param("disable_eswinmem", do_disable_eswinmem);
+
 static int __init rmem_eswin_setup(struct reserved_mem *rmem)
 {
+	if (disable_eswinmem) {
+		pr_notice("Disable eswin reserved memory in setup\n");
+		return 0;
+	}
+
 	unsigned long node = rmem->fdt_node;
 	int err;
 
