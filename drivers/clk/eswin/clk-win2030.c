@@ -24,6 +24,7 @@
 #include <linux/clk-provider.h>
 #include <linux/of.h>
 #include <linux/of_device.h>
+#include <linux/platform_device.h>
 
 #include <dt-bindings/reset/eswin,win2030-syscrg.h>
 #include <dt-bindings/clock/win2030-clock.h>
