@@ -177,7 +177,7 @@ __printf(2, 0) static void _fusb303b_log(struct fusb303b_chip *chip,
 	if (fusb303b_log_full(chip))
 	{
 		chip->logbuffer_head = max(chip->logbuffer_head - 1, 0);
-		strlcpy(tmpbuffer, "overflow", sizeof(tmpbuffer));
+		strscpy(tmpbuffer, "overflow", 9);
 	}
 
 	if (chip->logbuffer_head < 0 ||
