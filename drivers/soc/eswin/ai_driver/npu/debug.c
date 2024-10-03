@@ -144,7 +144,7 @@ int dump2file(const char *fname, const void *data, size_t len)
 	return 0;
 }
 
-int dumpMD5(const char *fname, struct win_executor *executor, uint32_t index)
+static int dumpMD5(const char *fname, struct win_executor *executor, uint32_t index)
 {
 	int i;
 	int len = 0;
@@ -296,7 +296,7 @@ char *pcer2str(u8 pcer)
 #define P_BUF_LEN 128
 #define F_NAME_LEN 512
 
-void dump_data_cube(struct win_executor *executor, struct host_frame_desc *f,
+static void dump_data_cube(struct win_executor *executor, struct host_frame_desc *f,
 		    struct dla_data_cube *data,
 		    struct dla_common_op_desc *op_desc, const char *name)
 {

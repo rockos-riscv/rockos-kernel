@@ -75,13 +75,13 @@ enum coda_cache_reg {
 
 void *spram_start = NULL;
 
-void npu_llc_write(struct nvdla_device *dev, uint32_t device, uint32_t addr,
+static void npu_llc_write(struct nvdla_device *dev, uint32_t device, uint32_t addr,
 		   uint32_t value)
 {
 	dla_reg_write(dev, npu_llc_offset[device] + addr, value);
 }
 
-uint32_t npu_llc_read(struct nvdla_device *dev, uint32_t device, uint32_t addr)
+static uint32_t npu_llc_read(struct nvdla_device *dev, uint32_t device, uint32_t addr)
 {
 	return dla_reg_read(dev, npu_llc_offset[device] + addr);
 }

@@ -202,7 +202,7 @@ static void dump_pec_dev_major_inf_t(pec_dev_major_inf_t *pec_maj)
 }
 #endif
 
-int conv_prepare_io_tensor(struct win_executor *executor, int seq,
+static int conv_prepare_io_tensor(struct win_executor *executor, int seq,
 			   union dla_surface_container *surface_desc)
 {
 	conv_dev_hdr_t *conv_hdr = NULL;

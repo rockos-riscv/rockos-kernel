@@ -559,7 +559,7 @@ static int32_t __exit edla_remove(struct platform_device *pdev)
 	return 0;
 }
 
-int __maybe_unused npu_runtime_suspend(struct device *dev)
+static int __maybe_unused npu_runtime_suspend(struct device *dev)
 {
 	struct nvdla_device *ndev = dev_get_drvdata(dev);
 	int ret;
@@ -575,7 +575,7 @@ int __maybe_unused npu_runtime_suspend(struct device *dev)
 	return ret;
 }
 
-int __maybe_unused npu_runtime_resume(struct device *dev)
+static int __maybe_unused npu_runtime_resume(struct device *dev)
 {
 	struct nvdla_device *ndev = dev_get_drvdata(dev);
 	int ret;
@@ -594,7 +594,7 @@ int __maybe_unused npu_runtime_resume(struct device *dev)
 	return ret;
 }
 
-int __maybe_unused npu_suspend(struct device *dev)
+static int __maybe_unused npu_suspend(struct device *dev)
 {
 	int ret;
 	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
@@ -624,7 +624,7 @@ int __maybe_unused npu_suspend(struct device *dev)
 	return 0;
 }
 
-int __maybe_unused npu_resume(struct device *dev)
+static int __maybe_unused npu_resume(struct device *dev)
 {
 	int ret;
 	struct nvdla_device *ndev = dev_get_drvdata(dev);

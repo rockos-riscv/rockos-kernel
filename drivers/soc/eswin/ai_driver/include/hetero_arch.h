@@ -47,7 +47,6 @@ extern "C" {
 
 #if NPU_DEV_SIM != NPU_REAL_ENV
 
-#define ffs(value) ((value) == 0 ? sizeof(u32) * 8 : __builtin_ctz(value))
 #define popcnt __builtin_popcount
 
 extern void reg_write(u32 addr, u32 value);
@@ -89,26 +88,6 @@ extern bool all_frames_completed(void);
     asm volatile("ori tp, %2, %0\n"                                  \
                  ".insn r 0xB, 0x0, 0x4, x0, %1, tp" ::"i"(op_code), \
                  "r"(rs1), "r"(rs2));
-
-#ifndef __KERNEL__
-#define ffs(value) _ffs(value)
-#else
-#define ffs(value) ((value) == 0 ? sizeof(u32) * 8 : __builtin_ctz(value))
-#endif
-
-/**
- * @brief Scan binary representation of r0 from LSB to MSB. Calculate the first occasion of 1 and return this value.
- * Returns 32 if r0 equals 0.
- *
- * @param r0
- * @return u32
- */
-static inline u32 _ffs(u32 r0)
-{
-    u32 r1;
-    get_scie_data(r1, r0, 0x0);
-    return r1;
-}
 
 #define TIMER0_BASE 0x51840000
 #define PTS_CHAN 7

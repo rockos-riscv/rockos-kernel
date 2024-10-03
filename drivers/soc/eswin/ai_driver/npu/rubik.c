@@ -241,7 +241,7 @@ exit:
 	return ret;
 }
 
-void dla_rubik_dump_config(struct dla_processor_group *group)
+static void dla_rubik_dump_config(struct dla_processor_group *group)
 {
 	struct dla_rubik_op_desc *rubik_op;
 	struct dla_rubik_surface_desc *rubik_surface;

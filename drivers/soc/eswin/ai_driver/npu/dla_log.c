@@ -163,7 +163,7 @@ void dla_output_loopbuf(void)
 	return;
 }
 
-void set_debug_level(int level)
+static void set_debug_level(int level)
 {
 	npu_debug_control = level;
 }
