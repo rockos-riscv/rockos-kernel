@@ -810,7 +810,7 @@ static int eswin_bootspi_probe(struct platform_device *pdev)
 		return -ENOMEM;
 
 	master->mode_bits = SPI_CPOL | SPI_CPHA;
-	master->flags = SPI_MASTER_HALF_DUPLEX;
+	master->flags = SPI_CONTROLLER_HALF_DUPLEX;
 	master->setup = eswin_bootspi_setup;
 	master->dev.of_node = pdev->dev.of_node;
 	master->bits_per_word_mask = SPI_BPW_MASK(32) | SPI_BPW_MASK(16) |
