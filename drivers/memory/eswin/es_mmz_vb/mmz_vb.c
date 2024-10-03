@@ -479,7 +479,7 @@ static const struct dma_buf_ops mmz_vb_buf_ops = {
 	.release = mmz_vb_dma_buf_release,
 };
 
-static const unsigned int orders[] = {MAX_ORDER-1, 9, 0};
+static const unsigned int orders[] = {MAX_PAGE_ORDER-1, 9, 0};
 #define NUM_ORDERS ARRAY_SIZE(orders)
 
 static struct page *alloc_largest_available(struct mem_block *memblock,

@@ -98,7 +98,7 @@ static int __init eswin_rsvmem_init_reserved_mem(phys_addr_t base, phys_addr_t s
 
 	/* ensure minimal alignment */
 	alignment = PAGE_SIZE <<
-			max_t(unsigned long, MAX_ORDER - 1, pageblock_order);
+			max_t(unsigned long, MAX_PAGE_ORDER - 1, pageblock_order);
 
 	if (ALIGN(base, alignment) != base || ALIGN(size, alignment) != size) {
 		pr_err("Alignment Err! base:0x%llx, size:0x%llx, alignment:0x%llx\n", base, size, alignment);

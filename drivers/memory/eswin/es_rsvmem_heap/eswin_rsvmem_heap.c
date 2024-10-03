@@ -25,7 +25,7 @@
 #include "../es_buddy/es_buddy.h"
 #include "include/uapi/linux/eswin_rsvmem_common.h"
 
-static const unsigned int orders[] = {MAX_ORDER-1, 9, 0};
+static const unsigned int orders[] = {MAX_PAGE_ORDER-1, 9, 0};
 #define NUM_ORDERS ARRAY_SIZE(orders)
 
 struct eswin_rsvmem_heap {

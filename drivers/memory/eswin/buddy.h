@@ -57,7 +57,7 @@ enum esPageflags_e{
 
 #define BUDDY_PAGE_SHIFT    PAGE_SHIFT//(12UL)
 #define BUDDY_PAGE_SIZE     (1UL << BUDDY_PAGE_SHIFT)
-#define BUDDY_MAX_ORDER     MAX_ORDER // (10UL)//(9UL)
+#define BUDDY_MAX_ORDER     MAX_PAGE_ORDER // (10UL)//(9UL)
 
 struct esPage_s
 {
