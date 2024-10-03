@@ -297,7 +297,7 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
 }
 
 static const struct dw_pcie_host_ops eswin_pcie_host_ops = {
-	.host_init = eswin_pcie_host_init,
+	.init = eswin_pcie_host_init,
 };
 
 static const struct dw_pcie_ops dw_pcie_ops = {
