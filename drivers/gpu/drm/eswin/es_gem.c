@@ -45,7 +45,7 @@ static int get_pages(unsigned int nr_page, struct es_gem_object *es_obj)
 		order = get_order(num_page * PAGE_SIZE);
 		num_page = 1 << order;
 
-		if ((num_page + page_count > nr_page) || (order >= MAX_ORDER)) {
+		if ((num_page + page_count > nr_page) || (order >= MAX_PAGE_ORDER)) {
 			num_page = num_page >> 1;
 			continue;
 		}
