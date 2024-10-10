@@ -24,7 +24,7 @@ jobs:
           - name: native
             cross: riscv64-linux-gnu-
             machine: [ self-hosted, Linux, riscv64, rockos, eswin ]
-            run_image: ghcr.io/revyos/revyos-kernel-builder:riscv64-2024.04.19
+            run_image: ghcr.io/revyos/revyos-kernel-builder:riscv64-2024.10.10
             board: win2030
             compiler: riscv64-linux-gnu-gcc-13
 
