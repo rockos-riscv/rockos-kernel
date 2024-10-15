@@ -103,6 +103,18 @@
 		};
 	};
 
+	d0_dsp_opp_table: opp-table {
+		compatible = "operating-points-v2";
+		opp@600000000 {
+			opp-hz = /bits/ 64 <520000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@1040000000 {
+			opp-hz = /bits/ 64 <1040000000>;
+			opp-microvolt = <800000>;
+		};
+	};
+
 	thermal-zones {
 		thermal0 {
 			polling-delay-passive = <500>; /*ms*/
@@ -614,6 +626,7 @@
 					0x28120000 0 0x5b120000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_0>;
 				clock-names = "aclk";
+				operating-points-v2 = <&d0_dsp_opp_table>;
 				dsp_mbox = <&d0_mbox4>;
 				device-irq = <11
 					ESWIN_MAILBOX_DSP_0_TO_U84_REG_BASE
@@ -644,6 +657,7 @@
 					0x28120000 0 0x5b160000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_1>;
 				clock-names = "aclk";
+				operating-points-v2 = <&d0_dsp_opp_table>;
 				dsp_mbox = <&d0_mbox5>;
 				device-irq = <13
 					ESWIN_MAILBOX_DSP_1_TO_U84_REG_BASE
@@ -673,6 +687,7 @@
 					0x28120000 0 0x5b1a0000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_2>;
 				clock-names = "aclk";
+				operating-points-v2 = <&d0_dsp_opp_table>;
 				dsp_mbox = <&d0_mbox6>;
 				device-irq = <15
 					ESWIN_MAILBOX_DSP_2_TO_U84_REG_BASE
@@ -702,6 +717,7 @@
 					0x28120000 0 0x5b1e0000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_3>;
 				clock-names = "aclk";
+				operating-points-v2 = <&d0_dsp_opp_table>;
 				dsp_mbox = <&d0_mbox7>;
 				device-irq = <17
 					ESWIN_MAILBOX_DSP_3_TO_U84_REG_BASE
