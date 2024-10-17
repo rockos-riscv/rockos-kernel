@@ -115,6 +115,22 @@
 		};
 	};
 
+	d0_vi_opp_table: opp-table@vi {
+		compatible = "operating-points-v2";
+		opp@800000000 {
+			opp-hz = /bits/ 64 <800000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@400000000 {
+			opp-hz = /bits/ 64 <400000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@200000000 {
+			opp-hz = /bits/ 64 <200000000>;
+			opp-microvolt = <800000>;
+		};
+	};
+
 	thermal-zones {
 		thermal0 {
 			polling-delay-passive = <500>; /*ms*/
@@ -2156,6 +2172,7 @@
 			         <&d0_reset VI_RST_CTRL SW_VI_DWE_RSTN>;
 			reset-names = "axi", "cfg", "dwe";
 
+			operating-points-v2 = <&d0_vi_opp_table>;
 			interrupt-parent = <&plic0>;
 			interrupts = <26 25>;
 			#size-cells = <2>;
