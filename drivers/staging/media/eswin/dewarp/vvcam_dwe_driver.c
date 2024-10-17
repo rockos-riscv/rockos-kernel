@@ -74,6 +74,8 @@
 #include <linux/eswin-win2030-sid-cfg.h>
 #include <linux/pm_runtime.h>
 #include <linux/clk.h>
+#include <linux/devfreq.h>
+#include <linux/pm_opp.h>
 
 #include "dw200_fe.h"
 #include "dw200_ioctl.h"
@@ -181,7 +183,7 @@ static unsigned int dewarp_poll(struct file *filp, poll_table *wait)
 	return mask;
 }
 
-static int obtain_dewarp_mis(struct device *dev)
+int obtain_dewarp_mis(struct device *dev)
 {
 	struct es_dewarp_driver_dev *pdriver_dev = dev_get_drvdata(dev);
 	struct dw200_subdev *pdwe_dev;
@@ -1041,6 +1043,66 @@ static int vvcam_sys_reset_release(dw_clk_rst_t *dw_crg)
 		}                                                  \
 	} while (0)
 
+int dewarp_set_aclk_rate(dw_clk_rst_t *dw_crg, unsigned long *rate)
+{
+	int ret;
+
+	*rate = clk_round_rate(dw_crg->aclk, *rate);
+	if (*rate > 0) {
+		ret = clk_set_rate(dw_crg->aclk, *rate);
+		if (ret) {
+			dev_err(dw_crg->dev, "failed to set aclk: %d\n", ret);
+			return ret;
+		}
+		dev_info(dw_crg->dev, "set dev rate to %ldHZ\n", *rate);
+	}
+	return 0;
+}
+
+int dewarp_get_aclk_rate(dw_clk_rst_t *dw_crg)
+{
+	unsigned long rate;
+	rate =  clk_get_rate(dw_crg->aclk);
+	dev_info(dw_crg->dev, "get dev rate %ldHZ\n", rate);
+	return rate;
+}
+
+/* devfreq target function to set frequency */
+static int dewarp_devfreq_target(struct device *dev, unsigned long *freq, u32 flags)
+{
+	struct es_dewarp_driver_dev *pdriver_dev = dev_get_drvdata(dev);
+	struct dw200_subdev *pdwe_dev;
+
+	pdwe_dev = &pdriver_dev->hw_dev;
+	return dewarp_set_aclk_rate(&pdwe_dev->dw_crg, freq);
+}
+
+static int dewarp_devfreq_get_cur_freq(struct device *dev, unsigned long *freq)
+{
+	struct es_dewarp_driver_dev *pdriver_dev = dev_get_drvdata(dev);
+	struct dw200_subdev *pdwe_dev;
+
+	pdwe_dev = &pdriver_dev->hw_dev;
+	unsigned long rate;
+
+	rate = dewarp_get_aclk_rate(&pdwe_dev->dw_crg);
+	if (rate <= 0) {
+		dev_err(dev, "failed to get aclk: %ld\n", rate);
+		return rate;
+	}
+	*freq = rate;
+	return 0;
+}
+
+/* devfreq profile */
+static struct devfreq_dev_profile dewarp_devfreq_profile = {
+	.initial_freq = VVCAM_AXI_CLK_HIGHEST,
+	.timer = DEVFREQ_TIMER_DELAYED,
+	.polling_ms = 1000, /* Poll every 1000ms to monitor load */
+	.target = dewarp_devfreq_target,
+	.get_cur_freq = dewarp_devfreq_get_cur_freq,
+};
+
 static int vvcam_sys_clk_config(dw_clk_rst_t *dw_crg)
 {
 	int ret = 0;
@@ -1056,16 +1118,6 @@ static int vvcam_sys_clk_config(dw_clk_rst_t *dw_crg)
 	if (ret < 0) {
 		pr_err("DW: failed to set dw_mux parent: %d\n", ret);
 		return ret;
-	}
-
-	rate = clk_round_rate(dw_crg->aclk, VVCAM_AXI_CLK_HIGHEST);
-	if (rate > 0) {
-		ret = clk_set_rate(dw_crg->aclk, rate);
-		if (ret) {
-			pr_err("DW: failed to set aclk: %d\n", ret);
-			return ret;
-		}
-		pr_info("DW set aclk to %ldHZ\n", rate);
 	}
 
 	rate = clk_round_rate(dw_crg->dw_aclk, VVCAM_DW_CLK_HIGHEST);
@@ -1094,7 +1146,7 @@ static int vvcam_sys_clk_prepare(dw_clk_rst_t *dw_crg)
 	return 0;
 }
 
-static int vvcam_sys_clk_unprepare(dw_clk_rst_t *dw_crg)
+int vvcam_sys_clk_unprepare(dw_clk_rst_t *dw_crg)
 {
 	int ret = 0;
 	//  tbu power down need enanle clk
@@ -1246,6 +1298,19 @@ static int es_dewarp_probe(struct platform_device *pdev)
 		return ret;
 	}
 
+	/* Add OPP table from device tree */
+	ret = dev_pm_opp_of_add_table(&pdev->dev);
+	if (ret) {
+		pr_err("%s, %d, Failed to add OPP table\n", __func__, __LINE__);
+		return ret;
+	}
+
+	df = devm_devfreq_add_device(&pdev->dev, &dewarp_devfreq_profile, "userspace", NULL);
+	if (IS_ERR(df)) {
+		pr_err("%s, %d, add devfreq failed\n", __func__, __LINE__);
+		return ret;
+	}
+
 	pdwe_dev->dw_crg.dev = &pdev->dev;
 	ret = vvcam_sys_clk_prepare(&pdwe_dev->dw_crg);
 	if (ret) {
@@ -1387,6 +1452,7 @@ static int es_dewarp_remove(struct platform_device *pdev)
 	return 0;
 }
 
+#ifdef CONFIG_PM_SLEEP
 static int dewarp_runtime_suspend(struct device *dev)
 {
 	struct es_dewarp_driver_dev *pdriver_dev = dev_get_drvdata(dev);
@@ -1462,6 +1528,7 @@ static int dewarp_resume(struct device *dev)
 
 	return ret;
 }
+#endif
 
 static const struct dev_pm_ops dewarp_pm_ops = {
 	SET_RUNTIME_PM_OPS(dewarp_runtime_suspend, dewarp_runtime_resume, NULL)
