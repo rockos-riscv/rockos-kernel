@@ -103,7 +103,7 @@
 		};
 	};
 
-	d0_dsp_opp_table: opp-table {
+	d0_dsp_opp_table: opp-table@dsp {
 		compatible = "operating-points-v2";
 		opp@600000000 {
 			opp-hz = /bits/ 64 <520000000>;
@@ -135,6 +135,22 @@
 	};
 
 	d0_vi_opp_table: opp-table@vi {
+		compatible = "operating-points-v2";
+		opp@800000000 {
+			opp-hz = /bits/ 64 <800000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@400000000 {
+			opp-hz = /bits/ 64 <400000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@200000000 {
+			opp-hz = /bits/ 64 <200000000>;
+			opp-microvolt = <800000>;
+		};
+	};
+
+	d0_venc_opp_table: opp-table@venc {
 		compatible = "operating-points-v2";
 		opp@800000000 {
 			opp-hz = /bits/ 64 <800000000>;
@@ -1124,6 +1140,7 @@
 					 <&d0_reset VE_RST_CTRL SW_VE_AXI_RSTN>;
 			reset-names = "axi", "cfg", "moncfg", "je_cfg", "je_axi", "ve_cfg", "ve_axi";
 			eswin,syscfg = <&d0_sys_con 0x0 0x4>;
+			operating-points-v2 = <&d0_venc_opp_table>;
 
 			vcmd-core = <0 0x6c>;
 			axife-core = <0x2000 0x7d0>;
