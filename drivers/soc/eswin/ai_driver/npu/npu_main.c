@@ -346,6 +346,15 @@ static int32_t edla_probe(struct platform_device *pdev)
 	nvdla_dev = devm_kzalloc(dev, sizeof(*nvdla_dev), GFP_KERNEL);
 	if (!nvdla_dev)
 		return -ENOMEM;
+	nvdla_dev->npu_regulator = devm_regulator_get(dev, "npu");
+
+	err = regulator_enable(nvdla_dev->npu_regulator);
+	if (err < 0)
+	{
+		dla_error("npu_regulator enble:%d err\n\r",err);
+		regulator_put(nvdla_dev->npu_regulator);
+		nvdla_dev->npu_regulator = NULL;
+	}
 
 	platform_set_drvdata(pdev, nvdla_dev);
 	nvdla_dev->pdev = pdev;
@@ -565,36 +574,35 @@ static int32_t __exit edla_remove(struct platform_device *pdev)
 
 int __maybe_unused npu_runtime_suspend(struct device *dev)
 {
-	struct nvdla_device *ndev = dev_get_drvdata(dev);
+	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
 	int ret;
 
-	if (!ndev) {
-		dla_error("%s, %d, ndev is null.\n", __func__, __LINE__);
+	if (!nvdla_dev) {
+		dla_error("%s, %d, nvdla_dev is null.\n", __func__, __LINE__);
 		return -EIO;
 	}
-
 	npu_tbu_power(dev, false);
-	ret = npu_disable_clock(ndev);
+	ret = npu_disable_clock(nvdla_dev);
 	dla_debug("%s, %d, ret=%d.\n", __func__, __LINE__, ret);
+
 	return ret;
 }
-
 int __maybe_unused npu_runtime_resume(struct device *dev)
 {
-	struct nvdla_device *ndev = dev_get_drvdata(dev);
+	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
 	int ret;
 
-	if (!ndev) {
-		dla_error("%s, %d, ndev is null.\n", __func__, __LINE__);
+	if (!nvdla_dev) {
+		dla_error("%s, %d, nvdla_dev is null.\n", __func__, __LINE__);
 		return -EIO;
 	}
-	ret = npu_enable_clock(ndev);
+	ret = npu_enable_clock(nvdla_dev);
     if (ret) {
         dla_error("%s, %d, enable clock err, ret = %d.\n", __func__, __LINE__, ret);
         return ret;
     }
 	npu_tbu_power(dev, true);
-	dla_debug("%s, %d, ret=%d.\n", __func__, __LINE__, ret);
+
 	return ret;
 }
 
@@ -625,31 +633,55 @@ int __maybe_unused npu_suspend(struct device *dev)
 
 	npu_tbu_power(dev, false);
 	npu_disable_clock(nvdla_dev);
+
+	npu_dev_assert(nvdla_dev);
+	if ((NULL != nvdla_dev->npu_regulator) && (!IS_ERR(nvdla_dev->npu_regulator)))
+	{
+		regulator_disable(nvdla_dev->npu_regulator);
+	}
+
 	return 0;
 }
 
 int __maybe_unused npu_resume(struct device *dev)
 {
 	int ret;
-	struct nvdla_device *ndev = dev_get_drvdata(dev);
+	int is_enable = 0;
 
-	ret = npu_enable_clock(ndev);
+	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
+
+	if ((NULL != nvdla_dev->npu_regulator) && (!IS_ERR(nvdla_dev->npu_regulator)))
+	{
+		is_enable = regulator_is_enabled(nvdla_dev->npu_regulator);
+		if(0 == is_enable)
+		{
+			mdelay(20);
+		}
+		ret = regulator_enable(nvdla_dev->npu_regulator);
+		if(ret < 0)
+		{
+			dla_error("%s, %d regulator_enable eror\n", __func__, __LINE__);
+		}
+		if(0 == is_enable)
+		{
+			mdelay(20);
+		}
+	}
+	ret = npu_enable_clock(nvdla_dev);
 	if (ret < 0) {
 		return ret;
 	}
-	ret = npu_hardware_reset(ndev);
+	ret = npu_hardware_reset(nvdla_dev);
 	if (ret) {
 		dla_error("hardware reset error, ret=%d.\n", ret);
 		return -EIO;
 	}
-
 	pm_runtime_get_noresume(dev);
-
-	ret = npu_init_reset(ndev);
+	ret = npu_init_reset(nvdla_dev);
 	if (ret < 0) {
 		goto err_reset;
 	}
-	ret = npu_init_mbox(ndev);
+	ret = npu_init_mbox(nvdla_dev);
 	if (ret) {
 		dev_err(dev, "npu init mailbox error, ret = %d.\n", ret);
 		goto err_reset;
@@ -657,14 +689,14 @@ int __maybe_unused npu_resume(struct device *dev)
 	npu_tbu_power(dev, true);
 	/* config streamID of NPU_DMA */
 
-	ret = npu_e31_load_fw(ndev);
+	ret = npu_e31_load_fw(nvdla_dev->pdev, nvdla_dev->e31_mmio_base);
 	if (ret) {
 		dev_err(dev, "load e31 fw error.\n");
 		goto err_load_firm;
 	}
-	npu_dma_sid_cfg(ndev->base, WIN2030_SID_NPU_DMA);
-	npu_hw_init(ndev);
-	ret = npu_init_ipc(ndev);
+	npu_dma_sid_cfg(nvdla_dev->base, WIN2030_SID_NPU_DMA);
+	npu_hw_init(nvdla_dev);
+	ret = npu_init_ipc(nvdla_dev);
 	if (ret) {
 		dev_err(dev, "npu init ipc error.\n");
 		goto err_ipc;
@@ -672,14 +704,15 @@ int __maybe_unused npu_resume(struct device *dev)
 
 	pm_runtime_mark_last_busy(dev);
 	pm_runtime_put_autosuspend(dev);
+
 	return 0;
 
 err_ipc:
-	npu_init_reset(ndev);
+	npu_init_reset(nvdla_dev);
 err_load_firm:
 	npu_tbu_power(dev, false);
 err_reset:
-	npu_disable_clock(ndev);
+	npu_disable_clock(nvdla_dev);
 	return ret;
 }
 
