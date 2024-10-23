@@ -166,6 +166,22 @@
 		};
 	};
 
+	d0_vdec_opp_table: opp-table@vdec {
+		compatible = "operating-points-v2";
+		opp@800000000 {
+			opp-hz = /bits/ 64 <800000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@400000000 {
+			opp-hz = /bits/ 64 <400000000>;
+			opp-microvolt = <800000>;
+		};
+		opp@200000000 {
+			opp-hz = /bits/ 64 <200000000>;
+			opp-microvolt = <800000>;
+		};
+	};
+
 	thermal-zones {
 		thermal0 {
 			polling-delay-passive = <500>; /*ms*/
@@ -1092,6 +1108,7 @@
 					 <&d0_reset VD_RST_CTRL SW_VD_AXI_RSTN>;
 			reset-names = "axi", "cfg", "moncfg", "jd_cfg", "jd_axi", "vd_cfg", "vd_axi";
 			eswin,syscfg = <&d0_sys_con 0x0 0x4>;
+			operating-points-v2 = <&d0_vdec_opp_table>;
 
 			vcmd-core = <0 0x6c>;
 			axife-core = <0x200 0x100>;
