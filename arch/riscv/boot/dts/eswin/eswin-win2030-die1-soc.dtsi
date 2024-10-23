@@ -904,6 +904,19 @@
 				interrupt-parent = <&plic1>;
 		};
 
+		d1_npu_opp_table: opp-table {
+			compatible = "operating-points-v2";
+			opp@1040000000 {
+				opp-hz = /bits/ 64 <1040000000>;
+				opp-microvolt = <800000>;
+			};
+			opp@1500000000 {
+				opp-hz = /bits/ 64 <1500000000>;
+				opp-microvolt = <1050000>;
+			};
+
+		};
+
 		d1_npu: eswin-npu@71c00000 {
 			compatible = "eswin,npu";
 			reg = <0x0 0x71c00000 0x0 0x400000>;
@@ -925,6 +938,7 @@
 
 			resets = <&d1_reset NPU_RST_CTRL SW_NPU_E31CORE_RSTN>;
 			reset-names = "e31_core";
+			operating-points-v2 = <&d1_npu_opp_table>;
 
 			numa-node-id = <1>;
 			firmware-name = "eic7700_die1_e31_fw";
