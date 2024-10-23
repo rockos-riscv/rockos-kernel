@@ -260,6 +260,35 @@ int npu_dev_reset(struct nvdla_device *nvdla_dev)
 	return 0;
 }
 
+
+int npu_dev_assert(struct nvdla_device *nvdla_dev)
+{
+	int ret = 0;
+
+	ret = reset_control_assert(nvdla_dev->rstc_e31_core);
+	WARN_ON(0 != ret);
+
+	/*reset npu core*/
+	ret = npu_core_rst(0, false);
+	if (ret) {
+		dev_err(&nvdla_dev->pdev->dev, "npu_core_rst fail,error: %d.\n",
+			ret);
+		return ret;
+	}
+
+	/*reset npu cfg*/
+	ret = npu_cfg_rst(0, false);
+	if (ret) {
+		dev_err(&nvdla_dev->pdev->dev, "npu_core_rst fail,error: %d.\n",
+			ret);
+		return ret;
+	}
+
+	return 0;
+}
+
+
+
 int npu_init_reset(struct nvdla_device *nvdla_dev)
 {
 	struct platform_device *pdev = nvdla_dev->pdev;
