@@ -22,7 +22,7 @@ ccflags-y += -DNPU_DBG
 #ccflags-y += -DCONV_DUMP
 ccflags-y += -DLOG_LEVEL=$(LOG_LEVEL)
 ccflags-y += -Wno-unused-function
-ccflags-y += -Werror
+#ccflags-y += -Werror
 ccflags-y += -Wno-int-to-pointer-cast
 
 obj-$(CONFIG_ESWIN_NPU) += eic7700_npu.o

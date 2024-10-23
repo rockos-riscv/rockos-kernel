@@ -31,7 +31,7 @@
 #include <linux/wait.h>
 #include <linux/clk.h>
 #include <linux/mailbox_controller.h>
-
+#include <linux/regulator/consumer.h>
 #include "dla_interface.h"
 #include "hetero_common.h"
 
@@ -80,6 +80,7 @@ struct nvdla_device {
 	spinlock_t mbox_lock;
 
 	uint16_t *pause_op_list;
+	struct regulator *npu_regulator;
 };
 
 void dla_reg_write(struct nvdla_device *dev, uint32_t addr, uint32_t value);
