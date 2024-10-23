@@ -73,9 +73,17 @@
 #include "dla_buffer.h"
 #include "mailbox_regs.h"
 #include "nvdla_proc.h"
+#include <linux/eswin_npu.h>
+
+#if defined(CONFIG_PM_DEVFREQ)
+#include <linux/devfreq.h>
+#include <linux/pm_opp.h>
+#endif
+
 
 MODULE_IMPORT_NS(DMA_BUF);
 #define DRIVER_NAME "eswin_npu"
+#define NPU_CORE_CLK_HIGHEST 1500000000
 
 int64_t dla_get_time_us(void)
 {
@@ -324,6 +332,93 @@ struct nvdla_device *get_nvdla_dev(int i)
 	return static_nvdla_dev[i];
 }
 
+#if defined(CONFIG_PM_DEVFREQ)
+static int npu_devfreq_target(struct device *dev, unsigned long *freq, u32 flags)
+{
+	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
+	struct dev_pm_opp *opp;
+	unsigned long target_volt, target_rate;
+	unsigned long rate;
+	int ret;
+
+	opp = devfreq_recommended_opp(dev, freq, flags);
+	if (IS_ERR(opp)) {
+		return PTR_ERR(opp);
+	}
+
+	target_rate = dev_pm_opp_get_freq(opp);
+	target_volt = dev_pm_opp_get_voltage(opp);
+	dev_pm_opp_put(opp);
+	if (target_rate == nvdla_dev->rate) {
+		return 0;
+	}
+	mutex_lock(&nvdla_dev->devfreq_lock);
+	ret = regulator_set_voltage(nvdla_dev->npu_regulator, target_volt, target_volt);
+	if (ret) {
+		dev_err(dev, "Cannot set voltage %lu uV\n", target_volt);
+		goto out;
+	}
+
+        if (target_volt == NPU_1P5G_VOLTAGE) {
+		ret = clk_set_parent(nvdla_dev->mux_u_npu_core_3mux1_gfree, nvdla_dev->fixed_rate_clk_spll1_fout1);
+	} else if (target_volt == NPU_DEFAULT_VOLTAGE) {
+		ret = clk_set_parent(nvdla_dev->mux_u_npu_core_3mux1_gfree, nvdla_dev->fixed_rate_clk_spll2_fout2);
+	} else {
+		dev_err(dev, "Request freq %lu is not supported.\n", *freq);
+		ret = -EINVAL;
+		goto err_parent;
+	}
+	if (ret) {
+		dev_err(dev, "Cannot set target voltage %lu parent, (%d)\n", target_rate, ret);
+		goto err_parent;
+	}
+
+        rate = clk_round_rate(nvdla_dev->core_clk, target_rate);
+        ret = clk_set_rate(nvdla_dev->core_clk, rate);
+        if (ret != 0)
+        {
+		dev_err(dev, "failed to set core_clk: %d\n", ret);
+		goto err_rate;
+
+        }
+
+	nvdla_dev->rate = clk_get_rate(nvdla_dev->core_clk);
+	if (nvdla_dev->rate != target_rate) {
+		dev_err(dev, "Got wrong frequency, Request %lu, Current %lu.\n", target_rate, nvdla_dev->rate);
+		ret = -EIO;
+		goto err_rate;
+	}
+	nvdla_dev->rate = target_rate;
+	nvdla_dev->volt = target_volt;
+	mutex_unlock(&nvdla_dev->devfreq_lock);
+	return 0;
+
+err_rate:
+	clk_set_parent(nvdla_dev->mux_u_npu_core_3mux1_gfree, nvdla_dev->fixed_rate_clk_spll1_fout1);
+err_parent:
+	regulator_set_voltage(nvdla_dev->npu_regulator, nvdla_dev->volt, nvdla_dev->volt);
+out:
+	mutex_unlock(&nvdla_dev->devfreq_lock);
+	return ret;
+}
+
+static int npu_devfreq_get_cur_freq(struct device *dev, unsigned long *freq)
+{
+	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
+
+	*freq = nvdla_dev->rate;
+	return 0;
+}
+
+static struct devfreq_dev_profile npu_devfreq_profile = {
+	.initial_freq = NPU_CORE_CLK_HIGHEST,
+	.timer = DEVFREQ_TIMER_DELAYED,
+	.polling_ms = 1000,
+	.target = npu_devfreq_target,
+	.get_cur_freq = npu_devfreq_get_cur_freq,
+};
+#endif
+
 static int32_t  npu_probe_result = 0;
 
 static int32_t edla_probe(struct platform_device *pdev)
@@ -333,6 +428,10 @@ static int32_t edla_probe(struct platform_device *pdev)
 	struct nvdla_device *nvdla_dev;
 	struct device *dev = &pdev->dev;
 	uint32_t version;
+#if defined(CONFIG_PM_DEVFREQ)
+	struct devfreq *df = NULL;
+	struct dev_pm_opp *opp;
+#endif
 
 	dla_debug("%s enter.\n", __FUNCTION__);
 #if SMALL_PEC_MAT
@@ -346,25 +445,29 @@ static int32_t edla_probe(struct platform_device *pdev)
 	nvdla_dev = devm_kzalloc(dev, sizeof(*nvdla_dev), GFP_KERNEL);
 	if (!nvdla_dev)
 		return -ENOMEM;
-	nvdla_dev->npu_regulator = devm_regulator_get(dev, "npu");
-
-	err = regulator_enable(nvdla_dev->npu_regulator);
-	if (err < 0)
-	{
-		dla_error("npu_regulator enble:%d err\n\r",err);
-		regulator_put(nvdla_dev->npu_regulator);
-		nvdla_dev->npu_regulator = NULL;
-	}
 
 	platform_set_drvdata(pdev, nvdla_dev);
 	nvdla_dev->pdev = pdev;
 	spin_lock_init(&nvdla_dev->nvdla_lock);
 	mutex_init(&nvdla_dev->task_mutex);
 	init_waitqueue_head(&nvdla_dev->event_wq);
+	mutex_init(&nvdla_dev->devfreq_lock);
+
+	nvdla_dev->npu_regulator = devm_regulator_get(dev, "npu");
+	err = regulator_enable(nvdla_dev->npu_regulator);
+	if (err < 0)
+	{
+		dla_error("npu_regulator enble error:%d\n\r", err);
+		regulator_put(nvdla_dev->npu_regulator);
+		nvdla_dev->npu_regulator = NULL;
+		return err;
+	}
+
 	err = npu_dt_node_resources(nvdla_dev);
 	if (err) {
 		dla_error("error, get hw resource, ret=%d\n", err);
 		platform_set_drvdata(pdev, NULL);
+		regulator_disable(nvdla_dev->npu_regulator);
 		return -EINVAL;
 	}
 
@@ -374,6 +477,7 @@ static int32_t edla_probe(struct platform_device *pdev)
 		err = PTR_ERR(res);
 		goto err_mem0;
 	}
+
 
 	//npu configuration space, start from 0x51c00000
 	nvdla_dev->base = devm_ioremap_resource(&pdev->dev, res);
@@ -423,6 +527,36 @@ static int32_t edla_probe(struct platform_device *pdev)
 			__func__, __LINE__, err);
 		goto err_iomap_program;
 	}
+
+#if defined(CONFIG_PM_DEVFREQ)
+	/* Add OPP table from device tree */
+	err = devm_pm_opp_of_add_table(dev);
+	if (err) {
+		dev_err(dev, "%s, %d, Failed to add OPP table, ret = %d.\n", __func__, __LINE__, err);
+		goto err_init_reset;
+	}
+	nvdla_dev->rate = clk_get_rate(nvdla_dev->core_clk);
+	opp = devfreq_recommended_opp(dev, &nvdla_dev->rate, 0);
+	if (IS_ERR(opp)) {
+		err = PTR_ERR(opp);
+		goto err_init_reset;
+	}
+
+	nvdla_dev->rate = dev_pm_opp_get_freq(opp);
+	nvdla_dev->volt = dev_pm_opp_get_voltage(opp);
+
+	regulator_set_voltage(nvdla_dev->npu_regulator, nvdla_dev->volt, nvdla_dev->volt);
+
+	dev_pm_opp_put(opp);
+
+	df = devm_devfreq_add_device(dev, &npu_devfreq_profile, "userspace", NULL);
+	if (IS_ERR(df)) {
+		err = PTR_ERR(df);
+		dev_err(dev, "%s, %d, Failed to add devfreq device, ret=%d.\n", __func__, __LINE__, err);
+		goto err_init_reset;
+	}
+#endif
+
 
 	pm_runtime_set_autosuspend_delay(dev, 5000);
 	pm_runtime_use_autosuspend(dev);
@@ -522,6 +656,7 @@ err_iomap_program:
 err_iomap_emission:
 	release_mem_region(E31_EMISSION_DTIM_BASE + nvdla_dev->numa_id * NPU_DIE_REG_OFFSET, E31_EMISSION_DTIM_SIZE);
 err_mem0:
+	regulator_disable(nvdla_dev->npu_regulator);
 	npu_put_dt_resources(nvdla_dev);
 	npu_probe_result = err;
 	return err;
@@ -565,6 +700,8 @@ static int32_t __exit edla_remove(struct platform_device *pdev)
 	ret = npu_disable_clock(nvdla_dev);
 	npu_put_dt_resources(nvdla_dev);
 	npu_remove_sysfs(pdev);
+	regulator_disable(nvdla_dev->npu_regulator);
+
 	if (nvdla_dev->pause_op_list) {
 		vfree(nvdla_dev->pause_op_list);
 		nvdla_dev->pause_op_list = NULL;
@@ -597,10 +734,10 @@ int __maybe_unused npu_runtime_resume(struct device *dev)
 		return -EIO;
 	}
 	ret = npu_enable_clock(nvdla_dev);
-    if (ret) {
-        dla_error("%s, %d, enable clock err, ret = %d.\n", __func__, __LINE__, ret);
-        return ret;
-    }
+	if (ret) {
+		dla_error("%s, %d, enable clock err, ret = %d.\n", __func__, __LINE__, ret);
+		return ret;
+	}
 	npu_tbu_power(dev, true);
 
 	return ret;
