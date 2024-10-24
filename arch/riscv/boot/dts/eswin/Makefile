@@ -9,6 +9,7 @@ dtb-$(CONFIG_SOC_SIFIVE) += eswin-win2030.dtb \
 							eic7702-evb-a1-d0.dtb \
 							eic7702-evb-a1-d1.dtb \
 							eic7702-evb-a1.dtb\
-							eic7700-z530.dtb
+							eic7700-z530.dtb \
+							eic7702-evb-a1-interleave.dtb
 
 obj-$(CONFIG_BUILTIN_DTB) += $(addsuffix .o, $(dtb-y))
