@@ -32,155 +32,6 @@
 
 / {
     compatible = "sifive,hifive-unmatched-a00", "sifive,fu740-c000","sifive,fu740";
-	d0_cpu_opp_table: opp-table0 {
-		compatible = "operating-points-v2";
-		opp-shared;
-
-		opp-24000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_24M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-100000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_100M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-200000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_200M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-400000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_400M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-500000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_500M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-600000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_600M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-700000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_700M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-800000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_800M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-900000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_900M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-1000000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_1000M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-1200000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_1200M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-1300000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_1300M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-		opp-1400000000 {
-			opp-hz = /bits/ 64 <CLK_FREQ_1400M>;
-			opp-microvolt = <800000>;
-			clock-latency-ns = <70000>;
-		};
-	};
-
-	d0_dsp_opp_table: opp-table@dsp {
-		compatible = "operating-points-v2";
-		opp@600000000 {
-			opp-hz = /bits/ 64 <520000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@1040000000 {
-			opp-hz = /bits/ 64 <1040000000>;
-			opp-microvolt = <800000>;
-		};
-	};
-	d0_g2d_opp_table: opp-table@g2d {
-		compatible = "operating-points-v2";
-		opp@260000000 {
-			opp-hz = /bits/ 64 <260000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@520000000 {
-			opp-hz = /bits/ 64 <520000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@693333334 {
-			opp-hz = /bits/ 64 <693333334>;
-			opp-microvolt = <800000>;
-		};
-		opp@1040000000 {
-			opp-hz = /bits/ 64 <1040000000>;
-			opp-microvolt = <800000>;
-		};
-	};
-
-	d0_vi_opp_table: opp-table@vi {
-		compatible = "operating-points-v2";
-		opp@800000000 {
-			opp-hz = /bits/ 64 <800000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@400000000 {
-			opp-hz = /bits/ 64 <400000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@200000000 {
-			opp-hz = /bits/ 64 <200000000>;
-			opp-microvolt = <800000>;
-		};
-	};
-
-	d0_venc_opp_table: opp-table@venc {
-		compatible = "operating-points-v2";
-		opp@800000000 {
-			opp-hz = /bits/ 64 <800000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@400000000 {
-			opp-hz = /bits/ 64 <400000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@200000000 {
-			opp-hz = /bits/ 64 <200000000>;
-			opp-microvolt = <800000>;
-		};
-	};
-
-	d0_vdec_opp_table: opp-table@vdec {
-		compatible = "operating-points-v2";
-		opp@800000000 {
-			opp-hz = /bits/ 64 <800000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@400000000 {
-			opp-hz = /bits/ 64 <400000000>;
-			opp-microvolt = <800000>;
-		};
-		opp@200000000 {
-			opp-hz = /bits/ 64 <200000000>;
-			opp-microvolt = <800000>;
-		};
-	};
 
 	thermal-zones {
 		thermal0 {
@@ -693,7 +544,7 @@
 					0x28120000 0 0x5b120000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_0>;
 				clock-names = "aclk";
-				operating-points-v2 = <&d0_dsp_opp_table>;
+				operating-points-v2 = <&dsp_opp_table>;
 				dsp_mbox = <&d0_mbox4>;
 				device-irq = <11
 					ESWIN_MAILBOX_DSP_0_TO_U84_REG_BASE
@@ -724,7 +575,7 @@
 					0x28120000 0 0x5b160000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_1>;
 				clock-names = "aclk";
-				operating-points-v2 = <&d0_dsp_opp_table>;
+				operating-points-v2 = <&dsp_opp_table>;
 				dsp_mbox = <&d0_mbox5>;
 				device-irq = <13
 					ESWIN_MAILBOX_DSP_1_TO_U84_REG_BASE
@@ -754,7 +605,7 @@
 					0x28120000 0 0x5b1a0000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_2>;
 				clock-names = "aclk";
-				operating-points-v2 = <&d0_dsp_opp_table>;
+				operating-points-v2 = <&dsp_opp_table>;
 				dsp_mbox = <&d0_mbox6>;
 				device-irq = <15
 					ESWIN_MAILBOX_DSP_2_TO_U84_REG_BASE
@@ -784,7 +635,7 @@
 					0x28120000 0 0x5b1e0000 0x20000>;
 				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_3>;
 				clock-names = "aclk";
-				operating-points-v2 = <&d0_dsp_opp_table>;
+				operating-points-v2 = <&dsp_opp_table>;
 				dsp_mbox = <&d0_mbox7>;
 				device-irq = <17
 					ESWIN_MAILBOX_DSP_3_TO_U84_REG_BASE
@@ -835,7 +686,7 @@
 			recovery = <0>;
 			dma-noncoherent;
 			numa-node-id = <0>;
-			operating-points-v2 = <&d0_g2d_opp_table>;
+			operating-points-v2 = <&g2d_opp_table>;
 		};
 
 		gpu0: gpu@51400000 {
@@ -1108,7 +959,7 @@
 					 <&d0_reset VD_RST_CTRL SW_VD_AXI_RSTN>;
 			reset-names = "axi", "cfg", "moncfg", "jd_cfg", "jd_axi", "vd_cfg", "vd_axi";
 			eswin,syscfg = <&d0_sys_con 0x0 0x4>;
-			operating-points-v2 = <&d0_vdec_opp_table>;
+			operating-points-v2 = <&vdec_opp_table>;
 
 			vcmd-core = <0 0x6c>;
 			axife-core = <0x200 0x100>;
@@ -1157,7 +1008,7 @@
 					 <&d0_reset VE_RST_CTRL SW_VE_AXI_RSTN>;
 			reset-names = "axi", "cfg", "moncfg", "je_cfg", "je_axi", "ve_cfg", "ve_axi";
 			eswin,syscfg = <&d0_sys_con 0x0 0x4>;
-			operating-points-v2 = <&d0_venc_opp_table>;
+			operating-points-v2 = <&venc_opp_table>;
 
 			vcmd-core = <0 0x6c>;
 			axife-core = <0x2000 0x7d0>;
@@ -2226,7 +2077,7 @@
 			         <&d0_reset VI_RST_CTRL SW_VI_DWE_RSTN>;
 			reset-names = "axi", "cfg", "dwe";
 
-			operating-points-v2 = <&d0_vi_opp_table>;
+			operating-points-v2 = <&vi_opp_table>;
 			interrupt-parent = <&plic0>;
 			interrupts = <26 25>;
 			#size-cells = <2>;
