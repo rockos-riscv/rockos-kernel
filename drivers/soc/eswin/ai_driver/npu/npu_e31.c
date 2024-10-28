@@ -36,7 +36,7 @@
 #include <linux/clk.h>
 #include <linux/reset.h>
 #include <linux/iommu.h>
-#include "es_iommu_rsv.h"
+#include <linux/es_iommu_rsv.h>
 #include <asm/io.h>
 #include "dla_log.h"
 #include "hetero_host.h"

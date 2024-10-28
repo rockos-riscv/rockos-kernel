@@ -25,7 +25,7 @@
 #include <linux/delay.h>
 #include <linux/of.h>
 #include <linux/iommu.h>
-#include "es_iommu_rsv.h"
+#include <linux/es_iommu_rsv.h>
 #include <dla_err.h>
 #include <dla_interface.h>
 #include "dla_engine.h"
