@@ -462,18 +462,6 @@
 			ranges;
 			#include "eswin-win2030-die0-noc.dtsi"
 		};
-		d0_npu_opp_table: opp-table {
-			compatible = "operating-points-v2";
-			opp@1040000000 {
-				opp-hz = /bits/ 64 <1040000000>;
-				opp-microvolt = <800000>;
-			};
-			opp@1500000000 {
-				opp-hz = /bits/ 64 <1500000000>;
-				opp-microvolt = <1050000>;
-			};
-
-		};
 
 		d0_npu: eswin-npu@51c00000 {
 			compatible = "eswin,npu";
@@ -501,7 +489,7 @@
 
 			resets = <&d0_reset NPU_RST_CTRL SW_NPU_E31CORE_RSTN>;
 			reset-names = "e31_core";
-			operating-points-v2 = <&d0_npu_opp_table>;
+			operating-points-v2 = <&npu_opp_table>;
 
 			numa-node-id = <0>;
 			firmware-name = "eic7700_die0_e31_fw";
