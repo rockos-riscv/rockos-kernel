@@ -383,13 +383,7 @@
 };
 
 &d0_i2s2 {
-	status = "okay";
-	d0_i2s2_port: port {
-		d0_i2s2_endpoint: endpoint {
-			remote-endpoint = <&d0_codec1_endpoint>;
-			dai-format = "i2s";
-		};
-	};
+	status = "disabled";
 };
 
 &d0_graphcard0 {
@@ -400,14 +394,12 @@
 
 &d0_graphcard1 {
 	status = "okay";
-	label = "Analog Audio-1";
-	dais = <&d0_i2s2_port>;
+	label = "HDMI Audio";
+	dais = <&d0_i2s0_port>;
 };
 
 &d0_graphcard2 {
-	status = "okay";
-	label = "HDMI Audio";
-	dais = <&d0_i2s0_port>;
+        status = "disabled";
 };
 
 &isp_0 {
@@ -672,17 +664,6 @@
 			d0_codec0_endpoint: endpoint {
 				system-clock-frequency = <12288000>;
 				remote-endpoint = <&d0_i2s1_endpoint>;
-			};
-		};
-	};
-	d0_es8388_1: es8388-1@11 {
-		compatible = "eswin,es8388";
-		reg = <0x11>;
-		#sound-dai-cells = <0>;
-		port {
-			d0_codec1_endpoint: endpoint {
-				system-clock-frequency = <12288000>;
-				remote-endpoint = <&d0_i2s2_endpoint>;
 			};
 		};
 	};
