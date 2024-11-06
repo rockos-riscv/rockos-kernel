@@ -510,7 +510,7 @@ static int eswin_fan_control_probe(struct platform_device *pdev)
 	pwm_get_args(ctl->pwm, &pwm_args);
 
 	state.period = pwm_args.period;
-	state.duty_cycle = state.period/2;
+	state.duty_cycle = state.period*99/100; /* default set max speed */
 	dev_err(&pdev->dev, "state.period: %d state.duty_cycle: %d\n",
 			state.period,state.duty_cycle);
 	ret = pwm_apply_might_sleep(ctl->pwm, &state);
