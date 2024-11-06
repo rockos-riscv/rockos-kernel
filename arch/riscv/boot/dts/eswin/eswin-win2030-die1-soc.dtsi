@@ -2363,7 +2363,7 @@
 			dma-noncoherent;
 		};
 
-		d1_ddr0: ddr-controller@0 {
+		d1_ddr0: ddr-controller@72300000 {
 			compatible = "eswin,ddrc-1.20a";
 			interrupt-parent = <&plic1>;
 			interrupts = <10>;
@@ -2374,7 +2374,7 @@
 			status = "disabled";
 		};
 
-		d1_ddr1: ddr-controller@1 {
+		d1_ddr1: ddr-controller@72380000 {
 			compatible = "eswin,ddrc-1.20a";
 			interrupt-parent = <&plic1>;
 			interrupts = <299>;
