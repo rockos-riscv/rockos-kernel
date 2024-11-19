@@ -53,6 +53,25 @@
  *
  *****************************************************************************
  */
+/*
+ * ESWIN cipher serivce driver
+ *
+ * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Authors: Xiaojun Zou <zouxiaojun@eswincomputing.com>
+ */
 
 #include <linux/kernel.h>
 #include <linux/module.h>
@@ -130,7 +149,10 @@
 #define MAX_CMDBUF_INT_NUMBER             1
 #define INT_MIN_SUM_OF_IMAGE_SIZE         (4096 * 2160 * 1 * MAX_CMDBUF_INT_NUMBER)
 #define MAX_PROCESS_CORE_NUMBER           (4 * 8)
-#define PROCESS_MAX_SUM_OF_IMAGE_SIZE     (4096 * 2160 * MAX_SAME_MODULE_TYPE_CORE_NUMBER * MAX_PROCESS_CORE_NUMBER)
+#define PROCESS_MAX_VIDO_SIZE             (4096 * 2160 * MAX_SAME_MODULE_TYPE_CORE_NUMBER * MAX_PROCESS_CORE_NUMBER)
+#define PROCESS_MAX_JPEG_SIZE             (2147483648U) //32K*32K*2
+#define PROCESS_MAX_SUM_OF_IMAGE_SIZE                         \
+                    (PROCESS_MAX_VIDO_SIZE > PROCESS_MAX_JPEG_SIZE ? PROCESS_MAX_VIDO_SIZE : PROCESS_MAX_JPEG_SIZE)
 
 /** the wait time for the vcmd task list(in milliseconds):
  * 200x frame encoding time + 1000ms
