@@ -9,6 +9,6 @@ obj-$(CONFIG_ESWIN_RSVMEM_HEAP)			+= es_mmz_vb/
 obj-$(CONFIG_ESWIN_DEV_DMA_BUF)			+= es_dev_buf/
 obj-$(CONFIG_ESWIN_IOMMU_RSV)			+= es_iommu_rsv/
 
-ES_MEM_HEADER := drivers/memory/eswin/
+ES_MEM_HEADER := $(srctree)/drivers/memory/eswin/
 
-COPY_HEADERS := $(shell cp $(ES_MEM_HEADER)/*.h include/linux)
+COPY_HEADERS := $(shell mkdir -p include/linux && cp $(ES_MEM_HEADER)/*.h include/linux)
