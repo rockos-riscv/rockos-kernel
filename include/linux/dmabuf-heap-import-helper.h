@@ -1,3 +1,24 @@
+// SPDX-License-Identifier: GPL-2.0
+/*
+ * Header File of ESWIN DMABUF heap helper APIs
+ *
+ * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Authors: Min Lin <linmin@eswincomputing.com>
+ */
+
 #ifndef _DMABUF_HEAP_IMPORT_H_
 #define _DMABUF_HEAP_IMPORT_H_
 
@@ -47,13 +68,20 @@ struct heap_mem {
 	size_t size;
 };
 
-struct esw_export_buffer_info {
-	char name[64];
-	int fd_flags;
+struct eswin_split_buffer {
+	struct list_head attachments;
+	struct mutex lock;
+	unsigned long len;
+	struct sg_table sg_table; // for Re-formatted splitted sgt
+	struct sg_table orig_sg_table; // for originally splitted sgt
+	struct page **pages;
+	int vmap_cnt;
+	void *vaddr;
+	unsigned long fd_flags; // for vmap to determin the cache or non-cached mapping
 
-	int dbuf_fd;
-	struct dma_buf *dmabuf;
-
+	char name[64]; // export name
+	int dbuf_fd; // parent dmabuf fd
+	struct dma_buf *dmabuf; // parent dmabuf
 	struct esw_slice_buffer {
 		__u64 offset;
 		size_t len;
