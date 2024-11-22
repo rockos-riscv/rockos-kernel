@@ -2,8 +2,7 @@
 /*
  * eswin Specific Glue layer
  *
- * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights
- * reserved. SPDX-License-Identifier: GPL-2.0
+ * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
  *
  * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
@@ -114,7 +113,7 @@ static u8 es5340_read_byte(struct ES5340_DRIVER_DATA *data, u8 command)
 				ret);
 		return 0xff;
 	}
-		return (u8)ret;
+	return (u8)ret;
 }
 
 static s32 es5340_write_byte(struct ES5340_DRIVER_DATA *data, u8 command,
@@ -124,7 +123,7 @@ static s32 es5340_write_byte(struct ES5340_DRIVER_DATA *data, u8 command,
 	mutex_lock(&data->config_lock);
 	ret = i2c_smbus_write_byte_data(data->client, command, val);
 	mutex_unlock(&data->config_lock);
-		if (ret < 0)
+	if (ret < 0)
 	{
 		dev_err(&data->client->dev, "set command:0x%x value:0x%x error:%d\n",
 				command, val, ret);
@@ -178,7 +177,7 @@ static s32 es5340_write_word(struct ES5340_DRIVER_DATA *data, u8 command,
 	mutex_lock(&data->config_lock);
 	ret = i2c_smbus_write_word_data(data->client, command, val);
 	mutex_unlock(&data->config_lock);
-		if (ret < 0)
+	if (ret < 0)
 	{
 		dev_err(&data->client->dev, "set command:0x%x value:0x%x error:%d\n",
 				command, val, ret);
@@ -496,8 +495,6 @@ static struct hwmon_chip_info es5340_chip_info = {
 
 };
 
-
-
 static u8 es5340_volt2reg(struct ES5340_DRIVER_DATA *data, u32 volt_mv)
 {
 	s32 surplus_volt = (s32)ES5340_INIT_VOLT - (s32)volt_mv;
@@ -533,10 +530,10 @@ static s32 es5340_set_vout(struct ES5340_DRIVER_DATA *data, u32 volt_mv)
 {
 	u16 new_value = (u8)es5340_volt2reg(data, volt_mv);
 	const struct regulation_constraints *constraints = &es5340_matches[0].init_data->constraints;
-	if((volt_mv > (constraints->max_uV/1000))||( volt_mv < (constraints->min_uV/1000)))
+	if ((volt_mv > (constraints->max_uV / 1000)) || (volt_mv < (constraints->min_uV / 1000)))
 	{
-		dev_err(&data->rdev->dev,"max:%dmV,min:%dmV,now:%dmV\n",
-			(constraints->max_uV/1000),constraints->min_uV/1000,volt_mv);
+		dev_err(&data->rdev->dev, "max:%dmV,min:%dmV,now:%dmV\n",
+				(constraints->max_uV / 1000), constraints->min_uV / 1000, volt_mv);
 		return -EINVAL;
 	}
 
@@ -582,8 +579,7 @@ static struct attribute *es5340_attrs[] = {
 ATTRIBUTE_GROUPS(es5340);
 
 static struct linear_range es5340_ext_ranges[] = {
-	/* REGULATOR_LINEAR_RANGE(700000, 0, 100, 15625), //=1.953125mV*1000*8  */
-	REGULATOR_LINEAR_RANGE(600000, 0, 320, 3125), /* =1.5625mV*1000*2 */
+	REGULATOR_LINEAR_RANGE(600000, 0, 320, 3125),
 };
 
 /**
@@ -610,8 +606,8 @@ static s32 es5340_set_voltage_sel(struct regulator_dev *rdev,
 	new_value = es5340_ext_ranges->min + es5340_ext_ranges->step * selector;
 
 	dev_dbg(dev, "%s_volt:%duV,selector:%u,step:%u,min:%u\n", __FUNCTION__,
-			 new_value, selector, es5340_ext_ranges->step,
-			 es5340_ext_ranges->min);
+			new_value, selector, es5340_ext_ranges->step,
+			es5340_ext_ranges->min);
 
 	es5340_set_vout(data, new_value / 1000);
 
@@ -644,7 +640,7 @@ static s32 es5340_get_voltage_sel(struct regulator_dev *rdev)
 		diff_volt = 0;
 	}
 	dev_dbg(dev, "%s_diff_volt:%duV,volt:%u,min:%u\n", __FUNCTION__, diff_volt,
-			 volt_value, es5340_ext_ranges->min);
+			volt_value, es5340_ext_ranges->min);
 	index = DIV_ROUND_CLOSEST(diff_volt, es5340_ext_ranges->step);
 	if (index > es5340_ext_ranges->max_sel)
 	{
@@ -652,7 +648,7 @@ static s32 es5340_get_voltage_sel(struct regulator_dev *rdev)
 	}
 
 	dev_dbg(dev, "%s_diff_volt:%duV,step:%d,index:%d\n", __FUNCTION__, diff_volt,
-			 es5340_ext_ranges->step, index);
+			es5340_ext_ranges->step, index);
 	return index;
 }
 
@@ -730,8 +726,10 @@ static s32 es5340_init_data(struct ES5340_DRIVER_DATA *data,
 			 constraints->over_voltage_limits.warn);
 	es5340_ext_ranges->min = constraints->min_uV;
 	es5340_ext_ranges->min_sel = 0;
+	es5340_ext_ranges->step = (ES5340_VOLT_DENOMINATOR / ES5340_VOLT_NUMERATOR)*1000;
 	es5340_ext_ranges->max_sel = (constraints->max_uV - constraints->min_uV) / es5340_ext_ranges->step + 1;
 	es5340_regulator_desc.n_voltages = es5340_ext_ranges->max_sel;
+	dev_dbg(dev,"min:%duV,max:%duV,step:%duV,max_sel:%d\n", es5340_ext_ranges->min, constraints->max_uV, es5340_ext_ranges->step, es5340_ext_ranges->max_sel);
 
 	es5340_set_vout(data, default_voltage / 1000);
 	return ret;
@@ -797,7 +795,7 @@ static s32 es5340_probe(struct i2c_client *client)
 	}
 
 	dev_dbg(dev, "default_voltage:%u,%s,%s,%s,%s\n", default_voltage, data->es5340_label[0],
-			 data->es5340_label[1], data->es5340_label[2], data->es5340_label[3]);
+			data->es5340_label[1], data->es5340_label[2], data->es5340_label[3]);
 	/* fill isl6271a_matches array */
 	regulator_cnt = of_regulator_match(dev, parent, es5340_matches, ARRAY_SIZE(es5340_matches));
 	of_node_put(parent);
