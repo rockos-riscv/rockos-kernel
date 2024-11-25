@@ -53,7 +53,7 @@
 *
 *****************************************************************************/
 /*
- * ESWIN cipher serivce driver
+ * ESWIN gc hal kernel event APIs
  *
  * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
  *
