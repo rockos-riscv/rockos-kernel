@@ -47,6 +47,13 @@ struct dma_heap_attachment {
 	bool mapped;
 };
 
+struct dma_heap_attachment_cma {
+	struct device *dev;
+	struct sg_table table;
+	struct list_head list;
+	bool mapped;
+};
+
 static int dmabuf_heap_add_buf_handle(struct dmaheap_file_private *prime_fpriv,
 				    struct dma_buf *dma_buf, uint64_t handle)
 {
@@ -893,6 +900,7 @@ static int eswin_get_split_dmabuf(struct eswin_split_buffer *split_buffer)
 	 struct sg_table *orig_splitted_sgt = &split_buffer->orig_sg_table;
 	struct dma_buf_attachment *attach;
 	struct dma_heap_attachment *a;
+	struct dma_heap_attachment_cma *cma_a;
 	struct sg_table *par_origin_table;
 	int out_nents[1];
 	struct scatterlist *sg;
@@ -914,8 +922,16 @@ static int eswin_get_split_dmabuf(struct eswin_split_buffer *split_buffer)
 		return ret;
 	}
 
-	a = (struct dma_heap_attachment *)attach->priv;
-	par_origin_table = a->table;
+	if (unlikely(!strcmp("linux,cma", par_dma_buf->exp_name)))
+	{
+		cma_a = (struct dma_heap_attachment_cma *)attach->priv;
+		par_origin_table = &cma_a->table;
+	}
+	else {
+		a = (struct dma_heap_attachment *)attach->priv;
+		par_origin_table = a->table;
+	}
+
 	#ifdef PRINT_ORIGINAL_SPLITTERS
 	{
 		pr_debug("%s:parent[0x%px]:sgt->orig_nents=%d, nents=%d, sg_nents(in) %d\n",
