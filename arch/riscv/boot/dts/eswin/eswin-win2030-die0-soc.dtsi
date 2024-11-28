@@ -1977,9 +1977,8 @@
 			compatible = "eswin,win2030-dwc3";
 			#address-cells = <2>;
 			#size-cells = <2>;
-			clocks =<&d0_clock WIN2030_GATE_HSP_USB0_SUSPEND_CLK>,
-					<&d0_clock WIN2030_CLK_HSP_CFG_CLK>;
-			clock-names = "suspend","hsp_clk";
+			clocks =<&d0_clock WIN2030_GATE_HSP_USB0_SUSPEND_CLK>;
+			clock-names = "suspend";
 			eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x800 0x808 0x83c 0x840>;
 			resets = <&d0_reset HSPDMA_RST_CTRL SW_USB0_VAUX_RSTN>;
 			reset-names = "vaux";
@@ -2015,9 +2014,8 @@
 			compatible = "eswin,win2030-dwc3";
 			#address-cells = <2>;
 			#size-cells = <2>;
-			clocks =<&d0_clock WIN2030_GATE_HSP_USB1_SUSPEND_CLK>,
-					<&d0_clock WIN2030_CLK_HSP_CFG_CLK>;
-			clock-names = "suspend","hsp_clk";
+			clocks =<&d0_clock WIN2030_GATE_HSP_USB1_SUSPEND_CLK>;
+			clock-names = "suspend";
 			eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x900 0x908 0x93c 0x940>;
 			resets = <&d0_reset HSPDMA_RST_CTRL SW_USB1_VAUX_RSTN>;
 			reset-names = "vaux";
