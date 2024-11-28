@@ -6,20 +6,24 @@
  *
  * Author: Sean Cross <xobs@kosagi.com>
  */
-
-/*
- * Copyright (C) 2021 ESWIN, Inc. All rights reserved.
+/*****************************************************************************
+ * ESWIN codec driver
  *
- * This program is free software; you can redistribute it and/or modify
+ * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
  * it under the terms of the GNU General Public License as published by
- * the Free Software Foundation; either version 2 of the License, or
- * (at your option) any later version.
+ * the Free Software Foundation, version 2.
  *
- * This program is distributed in the hope that it will be useful, but WITHOUT
- * ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or
- * FITNESS FOR A PARTICULAR PURPOSE.  See the GNU General Public License for
- * more details.
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
  *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Authors: DengLei <denglei@eswincomputing.com>
  */
 
 
@@ -95,6 +99,9 @@ static const char * const supply_names[ES8328_SUPPLY_NUM] = {
 		SNDRV_PCM_FMTBIT_S20_3LE | \
 		SNDRV_PCM_FMTBIT_S24_LE | \
 		SNDRV_PCM_FMTBIT_S32_LE)
+
+#define EVB_BOARD  1
+#define DVB_BOARD  2
 
 struct es8328_priv {
 	struct regmap *regmap;
@@ -981,7 +988,7 @@ static const struct snd_soc_dai_ops es8328_dai_ops = {
 
 static struct snd_soc_dai_driver es8328_dai[3] = {
 	{
-		.name = "es8328-0-hifi-analog",
+		.name = "es8328-0",
 		.playback = {
 			.stream_name = "Playback",
 			.channels_min = MIN_CHANNEL_NUM,
@@ -1000,7 +1007,7 @@ static struct snd_soc_dai_driver es8328_dai[3] = {
 		.symmetric_rate = 1,
 	},
 	{
-		.name = "es8328-1-hifi-analog",
+		.name = "es8328-1",
 		.playback = {
 			.stream_name = "Playback",
 			.channels_min = MIN_CHANNEL_NUM,
@@ -1019,7 +1026,7 @@ static struct snd_soc_dai_driver es8328_dai[3] = {
 		.symmetric_rate = 1,
 	},
 	{
-		.name = "es8328-2-hifi-analog",
+		.name = "es8328-2",
 		.playback = {
 			.stream_name = "Playback",
 			.channels_min = MIN_CHANNEL_NUM,
@@ -1117,6 +1124,7 @@ static int es8328_open(struct snd_soc_component *component,
 }
 
 static const struct snd_soc_component_driver es8328_component_driver = {
+	.name           = "es8388",
 	.probe			= es8328_component_probe,
 	.remove			= es8328_remove,
 	.suspend		= es8328_suspend,
@@ -1184,7 +1192,7 @@ int es8328_probe(struct device *dev, struct regmap *regmap)
     }
 	dev_info(dev, "eswin platform:%d\n", es8328->eswin_plat);
 
-	if (es8328->eswin_plat == 2) {
+	if (es8328->eswin_plat == DVB_BOARD) {
 		es8328->front_jack_gpio = devm_gpiod_get(dev, "front-jack", GPIOD_IN);
 		ret = IS_ERR(es8328->front_jack_gpio);
 		if(ret) {
