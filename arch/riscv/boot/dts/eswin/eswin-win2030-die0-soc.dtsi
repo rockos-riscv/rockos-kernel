@@ -662,6 +662,26 @@
 				dsp@0 {
 				};
 			};
+			d0_sofdsp3: sofdsp@4 {
+				#sound-dai-cells = <1>;
+				#address-cells = <2>;
+				#size-cells = <2>;
+				compatible = "eswin,sof-dsp";
+				reg = <0x0 0x5b018000 0x0 0x8000>,
+					  <0x0 0x5b1c0000 0x0 0x40000>;
+				mbox-names = "dsp-mbox";
+				mboxes = <&d0_mbox7 0>;
+				clocks = <&d0_clock WIN2030_CLK_DSP_ACLK_3>;
+				clock-names = "aclk";
+				process-id = <3>;
+				iommus = <&smmu0 WIN2030_SID_DSP_3>;
+				tbus = <WIN2030_TBUID_DSP3>;
+				dma-noncoherent;
+				mailbox-dsp-to-u84-addr = <ESWIN_MAILBOX_DSP_3_TO_U84_REG_BASE>;
+				mailbox-u84-to-dsp-addr = <ESWIN_MAILBOX_U84_TO_DSP_3_REG_BASE>;
+				dsp-uart = <&d0_uart0>;
+				device-uart-mutex = <0x51820000>;
+			};
 		};
 
 		gc820: g2d@50140000 {
@@ -1676,8 +1696,9 @@
 
 		d0_i2s0: i2s0@50200000 {
 			compatible = "snps,i2s";
-			clocks = <&d0_clock WIN2030_CLK_VO_I2S_MCLK>;
-			clock-names = "mclk";
+			clocks = <&d0_clock WIN2030_CLK_VO_I2S_MCLK>,
+					<&d0_clock WIN2030_APLL_FOUT1>;
+			clock-names = "mclk", "apll";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#sound-dai-cells = <0x00000000>;
@@ -1694,8 +1715,9 @@
 
 		d0_i2s1: i2s1@50210000 {
 			compatible = "snps,i2s";
-			clocks = <&d0_clock WIN2030_CLK_VO_I2S_MCLK>;
-			clock-names = "mclk";
+			clocks = <&d0_clock WIN2030_CLK_VO_I2S_MCLK>,
+					<&d0_clock WIN2030_APLL_FOUT1>;
+			clock-names = "mclk", "apll";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#sound-dai-cells = <0x00000000>;
@@ -1712,8 +1734,9 @@
 
 		d0_i2s2: i2s2@50220000 {
 			compatible = "snps,i2s";
-			clocks = <&d0_clock WIN2030_CLK_VO_I2S_MCLK>;
-			clock-names = "mclk";
+			clocks = <&d0_clock WIN2030_CLK_VO_I2S_MCLK>,
+					<&d0_clock WIN2030_APLL_FOUT1>;
+			clock-names = "mclk", "apll";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#sound-dai-cells = <0x00000000>;
@@ -1726,6 +1749,11 @@
 				<&d0_reset VO_PHYRST_CTRL SW_VO_PRSTN>;
 			reset-names = "i2srst", "i2sprst", "voprst";
 			dma-noncoherent;
+		};
+
+		d0_soundcard: soundcard {
+			compatible = "simple-audio-card";
+			simple-audio-card,name = "Eswin sound card";
 		};
 
 		d0_graphcard0: graphcard0 {
