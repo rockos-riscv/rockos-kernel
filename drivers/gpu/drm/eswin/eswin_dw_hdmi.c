@@ -16,7 +16,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Authors: Eswin Driver team
+ * Authors: DengLei <denglei@eswincomputing.com>
  */
 
 #include <linux/component.h>
@@ -209,7 +209,7 @@ static struct dw_hdmi_phy_config eswin_phy_config[] = {
 	/*pixelclk   symbol   term   vlev*/
 	{ 165000000, 0x8088, 0x0007, 0x0180 },
 	{ 297000000, 0x80c8, 0x0004, 0x0180 },
-	{ 594000000, 0x80f8, 0x0000, 0x0180 },
+	{ 594000000, 0x80f3, 0x0000, 0x0180 },
 	{ ~0UL, 0x0000, 0x0000, 0x0000 }
 };
 
