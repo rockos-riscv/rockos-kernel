@@ -133,10 +133,10 @@
 					trip = <&target>;
 					contribution = <1024>;
 					cooling-device =
-						<&L17 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-						<&L22 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-						<&L27 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
-						<&L32 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
+						<&cpu_0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+						<&cpu_1 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+						<&cpu_2 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>,
+						<&cpu_3 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
 				map1 {
 					trip = <&target>;
