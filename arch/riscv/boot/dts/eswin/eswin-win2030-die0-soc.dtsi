@@ -1296,7 +1296,7 @@
 			pwm-minimum-period = <1000>;
 			pwms = <&pwm0 0 100000>;
 			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_die0_fan_tach_default>;
+			pinctrl-0 = <&pinctrl_die0_fan_tach_default &pinctrl_die0_pwm0_default>;
 			status = "disabled";
 			label = "fan_control";
 		};
@@ -1537,8 +1537,6 @@
 			clock-frequency = <200000000>;
 			resets = <&d0_reset TIMER_RST_CTRL SW_TIMER_RST_N>;
 			reset-names = "rst";
-			pinctrl-names = "default";
-			pinctrl-0 = <&pinctrl_die0_pwm0_default>;
 			status = "disabled";
 		};
 
