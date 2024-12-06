@@ -80,7 +80,10 @@
 			SNDRV_PCM_RATE_32000 | \
 			SNDRV_PCM_RATE_16000 | \
 			SNDRV_PCM_RATE_8000)
-#define ESW_I2S_FORMATS (SNDRV_PCM_FMTBIT_S32_LE | SNDRV_PCM_FMTBIT_S16_LE | SNDRV_PCM_FMTBIT_S24_LE)
+#define ESW_I2S_FORMATS (SNDRV_PCM_FMTBIT_S32_LE | \
+			SNDRV_PCM_FMTBIT_S16_LE | \
+			SNDRV_PCM_FMTBIT_S24_LE | \
+			SNDRV_PCM_FMTBIT_S24_3LE)
 
 #define DIE0_I2S0_IO_ADDR 0x51600124
 #define DIE1_I2S0_IO_ADDR 0x71600124
@@ -459,6 +462,7 @@ static int i2s_hw_params(struct snd_pcm_substream *substream,
 		i2s_drvdata->xfer_resolution = RESOLUTION_16_BIT;
 		break;
 	case SNDRV_PCM_FORMAT_S24_LE:
+	case SNDRV_PCM_FORMAT_S24_3LE:
 		config->data_width = 24;
 		i2s_drvdata->ccr = CLOCK_CYCLES_32 << CCR_WSS_POS |
 					NO_CLOCK_GATING;
