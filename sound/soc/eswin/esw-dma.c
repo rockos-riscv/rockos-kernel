@@ -159,6 +159,11 @@ int esw_pcm_dma_open(struct snd_soc_component *component,
 	substream->runtime->hw = hw;
 	substream->runtime->private_data = chip;
 
+	chip->conv_buf[substream->stream] = kzalloc(hw.period_bytes_max, GFP_KERNEL);
+	if (!chip->conv_buf[substream->stream]) {
+		return -ENOMEM;
+	}
+
 	return 0;
 }
 
@@ -252,6 +257,13 @@ int esw_pcm_dma_close(struct snd_soc_component *component,
 	struct i2s_dev *chip = dev_get_drvdata(component->dev);
 
 	dmaengine_synchronize(chip->chan[substream->stream]);
+
+	dev_dbg(chip->dev, "%s\n", __func__);
+
+	if (chip->conv_buf[substream->stream]) {
+		kfree(chip->conv_buf[substream->stream]);
+	}
+
 	return 0;
 }
 
@@ -263,7 +275,7 @@ int esw_pcm_dma_trigger(struct snd_soc_component *component,
 	struct dma_chan *chan = chip->chan[substream->stream];
 	int ret;
 
-	dev_dbg(chip->dev, "%s, cmd:%d\n", __func__, cmd);
+	dev_dbg(chip->dev, "%s, cmd:%d, sample bits:%d\n", __func__, cmd, runtime->sample_bits);
 
 	switch (cmd) {
 	case SNDRV_PCM_TRIGGER_START:
@@ -309,38 +321,63 @@ static int esw_pcm_dma_process(struct snd_soc_component *component,
 			       int channel, unsigned long hwoff,
 			       struct iov_iter *iter, unsigned long bytes)
 {
+	struct i2s_dev *chip = container_of(component, struct i2s_dev, pcm_component);
 	struct snd_pcm_runtime *runtime = substream->runtime;
 	bool is_playback = substream->stream == SNDRV_PCM_STREAM_PLAYBACK;
 	char *dma_ptr = (char *)runtime->dma_area + hwoff * 64 / runtime->frame_bits +
 			channel * (runtime->dma_bytes / runtime->channels);
 	snd_pcm_uframes_t frames;
 	u16 *ptr_16;
+	u8 *ptr_24_raw;
+	u32 *ptr_24;
 	u32 *ptr_32;
 	int i;
 
 	if (is_playback) {
-		if (copy_from_iter(dma_ptr, bytes, iter) != bytes)
+		if (runtime->sample_bits == 32) {
+			if (copy_from_iter(dma_ptr, bytes, iter) != bytes)
 				return -EFAULT;
-		if (runtime->sample_bits == 16) {
-			ptr_16 = (u16 *)dma_ptr;
-			ptr_32 = (u32 *)dma_ptr;
-			frames = bytes_to_frames(runtime, bytes);
-			for (i =  2 * frames - 1; i >= 0; i--) {
-				ptr_32[i] = (u32)ptr_16[i];
+		} else {
+			if (copy_from_iter(chip->conv_buf[0], bytes, iter) != bytes)
+				return -EFAULT;
+			if (runtime->sample_bits == 16) {
+				ptr_16 = (u16 *)chip->conv_buf[0];
+				ptr_32 = (u32 *)dma_ptr;
+				frames = bytes_to_frames(runtime, bytes);
+				for (i = 0; i < 2 * frames; i++) {
+					ptr_32[i] = (u32)ptr_16[i];
+				}
+			} else if (runtime->sample_bits == 24) {
+				ptr_24_raw = (u8 *)chip->conv_buf[0];
+				ptr_32 = (u32 *)dma_ptr;
+				for (i = 0; i < bytes / 3; i++) {
+					ptr_24 = (u32 *)(ptr_24_raw + i * 3);
+					ptr_32[i] = (*ptr_24) & 0xffffff;
+				}
 			}
 		}
 	} else {
-		if (runtime->sample_bits == 16) {
-			frames = bytes_to_frames(runtime, bytes);
-			ptr_16 = (u16 *)dma_ptr;
-			ptr_32 = (u32 *)dma_ptr;
-
-			for (i = 2 * frames - 1; i >= 0; i--) {
-				ptr_16[i] = ptr_32[i];
+		if (runtime->sample_bits == 32) {
+			if (copy_to_iter(dma_ptr, bytes, iter) != bytes)
+				return -EFAULT;
+		} else {
+			if (runtime->sample_bits == 16) {
+				frames = bytes_to_frames(runtime, bytes);
+				ptr_16 = (u16 *)chip->conv_buf[1];
+				ptr_32 = (u32 *)dma_ptr;
+				for (i = 0; i < 2 * frames; i++) {
+					ptr_16[i] = ptr_32[i];
+				}
+			} else if (runtime->sample_bits == 24) {
+				ptr_24_raw = (u8 *)chip->conv_buf[1];
+				ptr_32 = (u32 *)dma_ptr;
+				for (i = 0; i < bytes / 3; i++) {
+					memcpy(&ptr_24_raw[i * 3], &ptr_32[i], 3);
+				}
 			}
+			if (copy_to_iter(chip->conv_buf[1], bytes, iter) != bytes)
+				return -EFAULT;
 		}
-		if (copy_to_iter(dma_ptr, bytes, iter) != bytes)
-			return -EFAULT;
 	}
 
 	return 0;
