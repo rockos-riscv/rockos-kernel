@@ -199,6 +199,7 @@ struct i2s_dev {
 
 	unsigned int pcm_pos[2];
 	struct snd_soc_component pcm_component;
+	void *conv_buf[2];
 };
 
 #endif /* __I2S_H */
