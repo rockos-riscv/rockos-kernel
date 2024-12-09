@@ -1480,6 +1480,7 @@
 			dma-noncoherent;
 			eswin,hsp_sp_csr = <&d1_hsp_sp_csr 0x1030 0x100 0x108>;
 			eswin,syscrg_csr = <&d1_sys_crg 0x148 0x14c>;
+			eswin,dly_hsp_reg = <0x114 0x118 0x11c>;
 			snps,axi-config = <&d1_stmmac_axi_setup>;
 			d1_stmmac_axi_setup: stmmac-axi-config {
 				snps,blen = <0 0 0 0 16 8 4>;
@@ -1510,6 +1511,7 @@
 			dma-noncoherent;
 			eswin,hsp_sp_csr = <&d1_hsp_sp_csr 0x1034 0x200 0x208>;
 			eswin,syscrg_csr = <&d1_sys_crg 0x148 0x14c>;
+			eswin,dly_hsp_reg = <0x214 0x218 0x21c>;
 			snps,axi-config = <&d1_stmmac_axi_setup_gmac1>;
 			d1_stmmac_axi_setup_gmac1: stmmac-axi-config {
 				snps,blen = <0 0 0 0 16 8 4>;
