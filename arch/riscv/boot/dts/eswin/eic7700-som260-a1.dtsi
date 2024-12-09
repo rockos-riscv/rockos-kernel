@@ -453,7 +453,6 @@
 	pinctrl-names = "default";
 	eswin,rgmiisel = <&pinctrl 0x290 0x3>;
 	eswin,led-cfgs = <0x6100 0xa40 0x420>;
-
 	status = "okay";
 };
 
@@ -461,7 +460,6 @@
 	pinctrl-names = "default";
 	eswin,rgmiisel = <&pinctrl 0x294 0x3>;
 	eswin,led-cfgs = <0x6100 0xa40 0x420>;
-
 	status = "okay";
 };
 
