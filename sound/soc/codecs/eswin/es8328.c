@@ -101,8 +101,9 @@ static const char * const supply_names[ES8328_SUPPLY_NUM] = {
 		SNDRV_PCM_FMTBIT_S24_3LE | \
 		SNDRV_PCM_FMTBIT_S32_LE)
 
-#define EVB_BOARD  1
-#define DVB_BOARD  2
+#define EVB_BOARD   1
+#define DVB_BOARD   2
+#define Z530_BOARD  3
 
 struct es8328_priv {
 	struct regmap *regmap;
@@ -902,7 +903,7 @@ static int es8328_set_dai_fmt(struct snd_soc_dai *codec_dai,
 	/* Set MIC PGA Volume */
 	snd_soc_component_write(component, ES8328_ADCCONTROL1, 0x88);
 
-	if (es8328->eswin_plat == 2) {
+	if (es8328->eswin_plat == DVB_BOARD) {
 		if (gpiod_get_value(es8328->front_jack_gpio) == 1 && gpiod_get_value(es8328->back_jack_gpio) == 0) {
 			/* Select default capture path ---> LIN1 */
 			snd_soc_component_write(component, ES8328_ADCCONTROL2, 0);
@@ -910,6 +911,9 @@ static int es8328_set_dai_fmt(struct snd_soc_dai *codec_dai,
 			/* Select default capture path ---> LIN2 */
 			snd_soc_component_write(component, ES8328_ADCCONTROL2, 0x50);
 		}
+	} else if (es8328->eswin_plat == Z530_BOARD) {
+		/* Select default capture path ---> LIN1 */
+		snd_soc_component_write(component, ES8328_ADCCONTROL2, 0);
 	} else {
 		/* Select default capture path ---> phone mic */
 		snd_soc_component_write(component, ES8328_ADCCONTROL2, 0xf0);
