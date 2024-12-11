@@ -3,6 +3,9 @@ LOG_LEVEL ?= 0
 NPU_DEV_SIM ?= 0
 SMALL_PEC_MAT ?= 0
 
+ifeq ($(CONFIG_NPU_PERF),y)
+	NPU_PERF_STATS = 2
+endif
 ccflags-y += -I$(src)
 ccflags-y += -I$(srctree)/drivers/soc/eswin
 ccflags-y += -I$(srctree)/drivers/memory/eswin/codacache/
