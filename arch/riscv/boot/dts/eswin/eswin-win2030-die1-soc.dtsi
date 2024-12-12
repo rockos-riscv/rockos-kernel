@@ -1197,8 +1197,9 @@
 
 		d1_i2s0: i2s0@70200000 {
 			compatible = "snps,i2s";
-			clocks = <&d1_clock WIN2030_CLK_VO_I2S_MCLK>;
-			clock-names = "mclk";
+			clocks = <&d1_clock WIN2030_CLK_VO_I2S_MCLK>,
+					<&d1_clock WIN2030_APLL_FOUT1>;
+			clock-names = "mclk", "apll";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#sound-dai-cells = <0x00000000>;
@@ -1215,8 +1216,9 @@
 
 		d1_i2s1: i2s1@70210000 {
 			compatible = "snps,i2s";
-			clocks = <&d1_clock WIN2030_CLK_VO_I2S_MCLK>;
-			clock-names = "mclk";
+			clocks = <&d1_clock WIN2030_CLK_VO_I2S_MCLK>,
+					<&d1_clock WIN2030_APLL_FOUT1>;
+			clock-names = "mclk", "apll";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#sound-dai-cells = <0x00000000>;
@@ -1233,8 +1235,9 @@
 
 		d1_i2s2: i2s@70220000 {
 			compatible = "snps,i2s";
-			clocks = <&d1_clock WIN2030_CLK_VO_I2S_MCLK>;
-			clock-names = "mclk";
+			clocks = <&d1_clock WIN2030_CLK_VO_I2S_MCLK>,
+					<&d1_clock WIN2030_APLL_FOUT1>;
+			clock-names = "mclk", "apll";
 			#address-cells = <1>;
 			#size-cells = <0>;
 			#sound-dai-cells = <0x00000000>;
