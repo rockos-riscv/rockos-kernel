@@ -59,7 +59,7 @@
 
 &sdio0 {
 	/* sd card */
-	delay_code = <0x55>;
+	delay_code = <0x3b>;
 	drive-impedance-ohm = <33>;
 	enable-cmd-pullup;
 	enable-data-pullup;
@@ -69,7 +69,7 @@
 
 &sdio1 {
 	/* wifi module */
-	delay_code = <0x29>;
+	delay_code = <0x32>;
 	drive-impedance-ohm = <33>;
 	enable-cmd-pullup;
 	enable-data-pullup;
