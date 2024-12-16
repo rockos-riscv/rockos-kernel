@@ -41,9 +41,10 @@
 			thermal-sensors = <&pvt0>;
 
 			trips {
+				/*
 				threshold: trip-point0 {
-					temperature = <60000>; /* DC*1000 */
-					hysteresis = <1000>; /* DC*1000 */
+					temperature = <60000>;
+					hysteresis = <1000>;
 					type = "passive";
 				};
 				target: trip-point1 {
@@ -51,14 +52,16 @@
 					hysteresis = <1000>;
 					type = "passive";
 				};
+				*/
 				crit: trip-point2 {
-					temperature     = <110000>;
+					temperature     = <88000>;
 					hysteresis      = <0>;
 					type            = "critical";
 				};
 			};
 
 			cooling-maps {
+				/*
 				map0 {
 					trip = <&target>;
 					contribution = <1024>;
@@ -70,14 +73,15 @@
 				};
 				map1 {
 					trip = <&target>;
-					contribution = <1024>; /*TBD*/
+					contribution = <1024>;
 					cooling-device = <&d0_npu THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
 				map2 {
 					trip = <&target>;
-					contribution = <1024>; /*TBD*/
+					contribution = <1024>;
 					cooling-device = <&gpu0 THERMAL_NO_LIMIT THERMAL_NO_LIMIT>;
 				};
+				*/
 			};
 		};
 	};
