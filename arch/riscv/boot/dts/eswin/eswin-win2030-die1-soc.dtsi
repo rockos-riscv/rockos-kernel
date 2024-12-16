@@ -1352,7 +1352,7 @@
 					(ESWIN_MAILBOX_U84_TO_DSP_0_REG_BASE + 0x20000000)
 					ESWIN_MAIBOX_U84_IRQ_BIT
 					(ESWIN_MAILBOX_U84_TO_NPU_0_REG_BASE + 0x20000000)>;
-				device-uart = <0x70910000>;
+				device-uart = <0x50900000>;
 				device-irq-mode = <1>;
 				host-irq-mode = <1>;
 				firmware-name = "eic7700_dsp_fw";
@@ -1381,7 +1381,7 @@
 					(ESWIN_MAILBOX_U84_TO_DSP_1_REG_BASE + 0x20000000)
 					ESWIN_MAIBOX_U84_IRQ_BIT
 					(ESWIN_MAILBOX_U84_TO_NPU_0_REG_BASE + 0x20000000)>;
-				device-uart = <0x70910000>;
+				device-uart = <0x50900000>;
 				device-irq-mode = <1>;
 				host-irq-mode = <1>;
 				firmware-name = "eic7700_dsp_fw";
@@ -1410,7 +1410,7 @@
 					(ESWIN_MAILBOX_U84_TO_DSP_2_REG_BASE + 0x20000000)
 					ESWIN_MAIBOX_U84_IRQ_BIT
 					(ESWIN_MAILBOX_U84_TO_NPU_0_REG_BASE + 0x20000000)>;
-				device-uart = <0x70910000>;
+				device-uart = <0x50900000>;
 				device-irq-mode = <1>;
 				host-irq-mode = <1>;
 				firmware-name = "eic7700_dsp_fw";
@@ -1439,7 +1439,7 @@
 					(ESWIN_MAILBOX_U84_TO_DSP_3_REG_BASE + 0x20000000)
 					ESWIN_MAIBOX_U84_IRQ_BIT
 					(ESWIN_MAILBOX_U84_TO_NPU_0_REG_BASE + 0x20000000)>;
-				device-uart = <0x70910000>;
+				device-uart = <0x50900000>;
 				device-irq-mode = <1>;
 				host-irq-mode = <1>;
 				firmware-name = "eic7700_dsp_fw";
