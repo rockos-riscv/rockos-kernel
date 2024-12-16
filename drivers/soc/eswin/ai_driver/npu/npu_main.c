@@ -353,35 +353,55 @@ static int npu_devfreq_target(struct device *dev, unsigned long *freq, u32 flags
 		return 0;
 	}
 	mutex_lock(&nvdla_dev->devfreq_lock);
-	ret = regulator_set_voltage(nvdla_dev->npu_regulator, target_volt, target_volt);
-	if (ret) {
-		dev_err(dev, "Cannot set voltage %lu uV\n", target_volt);
-		goto out;
-	}
 
-        if (target_volt == NPU_1P5G_VOLTAGE) {
+	if (target_rate > nvdla_dev->rate) { // rise freq
+		ret = regulator_set_voltage(nvdla_dev->npu_regulator, target_volt, target_volt);
+		if (ret) {
+			dev_err(dev, "Cannot set voltage %lu uV\n", target_volt);
+			goto out;
+		}
+
 		ret = clk_set_parent(nvdla_dev->mux_u_npu_core_3mux1_gfree, nvdla_dev->fixed_rate_clk_spll1_fout1);
-	} else if (target_volt == NPU_DEFAULT_VOLTAGE) {
+		if (ret) {
+			dev_err(dev, "Cannot set target voltage %lu parent, (%d)\n", target_rate, ret);
+			goto err_parent;
+		}
+		mdelay(10);
+		rate = clk_round_rate(nvdla_dev->core_clk, target_rate);
+		ret = clk_set_rate(nvdla_dev->core_clk, rate);
+        	if (ret != 0)
+	        {
+			dev_err(dev, "failed to set core_clk: %d\n", ret);
+			goto err_rate;
+
+	        }
+
+	} else { // lower freq
 		ret = clk_set_parent(nvdla_dev->mux_u_npu_core_3mux1_gfree, nvdla_dev->fixed_rate_clk_spll2_fout2);
-	} else {
-		dev_err(dev, "Request freq %lu is not supported.\n", *freq);
-		ret = -EINVAL;
-		goto err_parent;
+		if (ret) {
+			dev_err(dev, "Cannot set target voltage %lu parent, (%d)\n", target_rate, ret);
+			goto out;
+		}
+
+		rate = clk_round_rate(nvdla_dev->core_clk, target_rate);
+		ret = clk_set_rate(nvdla_dev->core_clk, rate);
+        	if (ret != 0)
+	        {
+			dev_err(dev, "failed to set core_clk: %d\n", ret);
+			goto err_rate;
+
+	        }
+
+
+		ret = regulator_set_voltage(nvdla_dev->npu_regulator, target_volt, target_volt);
+		if (ret) {
+			dev_err(dev, "Cannot set voltage %lu uV\n", target_volt);
+			goto err_rate;
+		}
+		mdelay(10);
+
 	}
-	if (ret) {
-		dev_err(dev, "Cannot set target voltage %lu parent, (%d)\n", target_rate, ret);
-		goto err_parent;
-	}
-
-        rate = clk_round_rate(nvdla_dev->core_clk, target_rate);
-        ret = clk_set_rate(nvdla_dev->core_clk, rate);
-        if (ret != 0)
-        {
-		dev_err(dev, "failed to set core_clk: %d\n", ret);
-		goto err_rate;
-
-        }
-
+        
 	nvdla_dev->rate = clk_get_rate(nvdla_dev->core_clk);
 	if (nvdla_dev->rate != target_rate) {
 		dev_err(dev, "Got wrong frequency, Request %lu, Current %lu.\n", target_rate, nvdla_dev->rate);
