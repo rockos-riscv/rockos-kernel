@@ -160,6 +160,7 @@ struct eswin_clk_pll {
 	u8	lock_width;
 	struct gpio_desc *cpu_voltage_gpio;
 	enum voltage_level cpu_current_volatge;
+	bool force_1_8ghz;
 };
 
 struct eswin_clock_data *eswin_clk_init(struct platform_device *, int);
