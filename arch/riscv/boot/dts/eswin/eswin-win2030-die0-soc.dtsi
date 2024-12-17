@@ -1824,8 +1824,8 @@
 
 		video_output: display-subsystem@0 {
 			compatible = "eswin,display-subsystem";
-			ports = <&dc_out>;
 			numa-node-id = <0>;
+			ports = <&dc_out>;
 			dma-noncoherent;
 		};
 
@@ -1862,21 +1862,6 @@
 			dc_out: port {
 				#address-cells = <1>;
 				#size-cells = <0>;
-
-				dc_out_dsi: endpoint@0 {
-					reg = <0>;
-					remote-endpoint = <&dsi_input>;
-				};
-
-				dc_out_dpi1: endpoint@1 {
-					reg = <1>;
-					remote-endpoint = <&vd_input>;
-				};
-
-				dc_out_hdmi: endpoint@2 {
-					reg = <2>;
-					remote-endpoint = <&hdmi_in_dc>;
-				};
 			};
 		};
 
@@ -1884,12 +1869,6 @@
 			compatible = "eswin,virtual_display";
 			bpp = /bits/ 8 <8>;
 			numa-node-id = <0>;
-
-			port {
-				vd_input: endpoint {
-					remote-endpoint = <&dc_out_dpi1>;
-				};
-			};
 		};
 
 		dsi_output: dsi-output@0 {
@@ -1908,47 +1887,10 @@
 			resets = <&d0_reset VO_PHYRST_CTRL SW_VO_MIPI_PRSTN>;
 			reset-names ="phyrstn";
 			numa-node-id = <0>;
-
 			/*
 			phys = <&dphy>;
 			phy-names = "dphy";
 			*/
-
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-
-				port@0 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <0>;
-					dsi_input: endpoint {
-						remote-endpoint = <&dc_out_dsi>;
-					};
-				};
-
-				port@1 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <1>;
-
-					mipi_dsi_out: endpoint {
-						remote-endpoint = <&panel_in>;
-					};
-				};
-			};
-
-			dsi_panel:dsi_panel@0 {
-				compatible = "eswin,generic-panel";
-				reg = <0>;
-				dsi,format = <0>; //RGB888:0, RGB666:1, RGB565:3
-				dsi,lanes = <4>;
-				port {
-					panel_in: endpoint {
-						remote-endpoint = <&mipi_dsi_out>;
-					};
-				};
-			};
 		};
 
 		dc_test: dctest@502c0000 {
@@ -1979,17 +1921,6 @@
 					 <&d0_reset VO_PHYRST_CTRL SW_VO_HDMI_RSTN>;
 			reset-names = "prstn", "phyrstn", "rstn";
 			numa-node-id = <0>;
-
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-				port@0 {
-					reg = <0>;
-					hdmi_in_dc: endpoint@0 {
-						remote-endpoint = <&dc_out_hdmi>;
-					};
-				};
-			};
 		};
 
 		dw_hdmi_hdcp2: hdmi-hdcp2@50290000 {
