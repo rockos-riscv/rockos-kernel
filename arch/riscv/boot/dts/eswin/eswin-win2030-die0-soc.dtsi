@@ -1600,6 +1600,7 @@
 			#size-cells = <2>;
 			reg = <0x0 0x51840000 0x0 0x8000>;
 			perf_count = <7>;
+			numa-node-id = <0>;
 			interrupt-parent = <&plic0>;
 			interrupts = <345>;
 			clock-names = "pclk","timer_aclk";
@@ -1622,6 +1623,7 @@
 			#address-cells = <2>;
 			#size-cells = <2>;
 			reg = <0x0 0x51848000 0x0 0x8000>;
+			numa-node-id = <0>;
 			interrupt-parent = <&plic0>;
 			interrupts = <346>;
 			clock-names = "pclk","timer_aclk";
@@ -1644,6 +1646,7 @@
 			#address-cells = <2>;
 			#size-cells = <2>;
 			reg = <0x0 0x51850000 0x0 0x8000>;
+			numa-node-id = <0>;
 			interrupt-parent = <&plic0>;
 			interrupts = <347>;
 			clock-names = "pclk","timer_aclk";
@@ -1666,6 +1669,7 @@
 			#address-cells = <2>;
 			#size-cells = <2>;
 			reg = <0x0 0x51858000 0x0 0x8000>;
+			numa-node-id = <0>;
 			interrupt-parent = <&plic0>;
 			interrupts = <348>;
 			clock-names = "pclk","timer_aclk","timer3_clk8";
