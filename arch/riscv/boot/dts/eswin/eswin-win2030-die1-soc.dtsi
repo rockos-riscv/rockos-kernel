@@ -1772,21 +1772,6 @@
 			d1_dc_out: port {
 				#address-cells = <1>;
 				#size-cells = <0>;
-
-				d1_dc_out_dsi: endpoint@0 {
-					reg = <0>;
-					remote-endpoint = <&d1_dsi_input>;
-				};
-
-				d1_dc_out_dpi1: endpoint@1 {
-					reg = <1>;
-					remote-endpoint = <&d1_vd_input>;
-				};
-
-				d1_dc_out_hdmi: endpoint@2 {
-					reg = <2>;
-					remote-endpoint = <&d1_hdmi_in_dc>;
-				};
 			};
 		};
 
@@ -1794,12 +1779,6 @@
 			compatible = "eswin,virtual_display";
 			bpp = /bits/ 8 <8>;
 			numa-node-id = <1>;
-
-			port {
-				d1_vd_input: endpoint {
-					remote-endpoint = <&d1_dc_out_dpi1>;
-				};
-			};
 		};
 
 		d1_dsi_output: dsi-output@1 {
@@ -1818,48 +1797,10 @@
 			resets = <&d1_reset VO_PHYRST_CTRL SW_VO_MIPI_PRSTN>;
 			reset-names ="phyrstn";
 			numa-node-id = <1>;
-
 			/*
 			phys = <&dphy>;
 			phy-names = "dphy";
 			*/
-
-			ports {
-				#address-cells = <1>;
-				#size-cells = <0>;
-
-				port@0 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <0>;
-
-					d1_dsi_input: endpoint {
-						remote-endpoint = <&d1_dc_out_dsi>;
-					};
-				};
-
-				port@1 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					reg = <1>;
-
-					d1_mipi_dsi_out: endpoint {
-						remote-endpoint = <&d1_panel_in>;
-					};
-				};
-			};
-
-			d1_dsi_panel:dsi_panel@1 {
-				compatible = "eswin,generic-panel";
-				reg = <0>;
-				dsi,format = <0>; //RGB888:0, RGB666:1, RGB565:3
-				dsi,lanes = <4>;
-				port {
-					d1_panel_in: endpoint {
-						remote-endpoint = <&d1_mipi_dsi_out>;
-					};
-				};
-			};
 		};
 
 		d1_dc_test: dctest@702c0000 {
@@ -1890,17 +1831,6 @@
 					 <&d1_reset VO_PHYRST_CTRL SW_VO_HDMI_RSTN>;
 			reset-names = "prstn", "phyrstn", "rstn";
 			numa-node-id = <1>;
-
-			ports {
-				port@0 {
-					#address-cells = <1>;
-					#size-cells = <0>;
-					d1_hdmi_in_dc: endpoint@0 {
-						reg = <0>;
-						remote-endpoint = <&d1_dc_out_hdmi>;
-					};
-				};
-			};
 		};
 
 		d1_dw_hdmi_hdcp2: hdmi-hdcp2@70290000 {
