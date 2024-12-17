@@ -307,6 +307,7 @@ static int clk_pll_set_rate(struct clk_hw *hw,
 	char clk_cpu_lp_pll_name[50] = {0};
 	char clk_cpu_pll_name[50] = {0};
 	enum voltage_level cpu_target_volatge;
+	bool force_1_8ghz = clk->force_1_8ghz;
 
 	ret = eswin_calc_pll(&frac_val, &postdiv1_val, &fbdiv_val, &refdiv_val, (u64)rate, clk);
 	if (ret) {
@@ -366,7 +367,7 @@ static int clk_pll_set_rate(struct clk_hw *hw,
 			case CLK_FREQ_1700M:
 				cpu_target_volatge = VOLTAGE_0_9V;
 				ret = eswin_clk_set_cpu_volatge(clk->cpu_voltage_gpio, cpu_target_volatge);
-				if (ret) {
+				if (ret && !force_1_8ghz) {
 					pr_warn("failed to change cpu volatge to %d mV, not support rate %ld\n",
 						cpu_target_volatge, rate);
 					goto switch_back;
@@ -381,8 +382,10 @@ static int clk_pll_set_rate(struct clk_hw *hw,
 			case CLK_FREQ_1600M:
 			case CLK_FREQ_1500M:
 				cpu_target_volatge = true == cpu_no_boost_1_6ghz ? VOLTAGE_0_8V : VOLTAGE_0_9V;
+				if (force_1_8ghz)
+					cpu_target_volatge = VOLTAGE_0_9V;
 				ret = eswin_clk_set_cpu_volatge(clk->cpu_voltage_gpio, cpu_target_volatge);
-				if (ret) {
+				if (ret && !force_1_8ghz) {
 					pr_warn("failed to change cpu volatge to %d mV, not support rate %ld\n",
 						cpu_target_volatge , rate);
 					goto switch_back;
@@ -624,6 +627,7 @@ void eswin_clk_register_pll(struct eswin_pll_clock *clks,
 	struct clk_init_data init;
 	int i;
 	struct gpio_desc *cpu_voltage_gpio;
+	int force_1_8ghz = 0;
 
 	p_clk = devm_kzalloc(dev, sizeof(*p_clk) * nums, GFP_KERNEL);
 
@@ -638,6 +642,8 @@ void eswin_clk_register_pll(struct eswin_pll_clock *clks,
 		/*cpu default freq is 1400M, the volatge should be VOLTAGE_0_8V*/
 		eswin_clk_set_cpu_volatge(cpu_voltage_gpio, VOLTAGE_0_8V);
 	}
+	force_1_8ghz = device_property_read_bool(dev, "force-1_8ghz");
+
 	for (i = 0; i < nums; i++) {
 		char *name = kzalloc(strlen(clks[i].name)
 			+ 2 * sizeof(char) + sizeof(int), GFP_KERNEL);
@@ -688,6 +694,7 @@ void eswin_clk_register_pll(struct eswin_pll_clock *clks,
 		p_clk->hw.init = &init;
 		p_clk->cpu_voltage_gpio = cpu_voltage_gpio;
 		p_clk->cpu_current_volatge = VOLTAGE_0_8V;
+                p_clk->force_1_8ghz = force_1_8ghz;
 		clk = clk_register(dev, &p_clk->hw);
 		if (IS_ERR(clk)) {
 			devm_kfree(dev, p_clk);
