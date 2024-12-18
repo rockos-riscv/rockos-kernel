@@ -436,10 +436,6 @@ static int i2s_startup(struct snd_pcm_substream *substream,
 
 	dai_link->trigger_stop = SND_SOC_TRIGGER_ORDER_LDC;
 
-	if (!strcmp(cpu_dai->name, D0_HDMI_DAI_NAME) || !strcmp(cpu_dai->name, D1_HDMI_DAI_NAME)) {
-		dai_link->playback_only = 1;
-	}
-
 	return 0;
 }
 
@@ -885,12 +881,6 @@ static struct snd_soc_dai_driver i2s_dai[8] = {
 		.id = 0,
 		.ops = &i2s_dai_ops,
 		.playback = {
-			.channels_min = MIN_CHANNEL_NUM,
-			.channels_max = MAX_CHANNEL_NUM,
-			.rates = ESW_I2S_RATES,
-			.formats = ESW_I2S_FORMATS,
-		},
-		.capture = {
 			.channels_min = MIN_CHANNEL_NUM,
 			.channels_max = MAX_CHANNEL_NUM,
 			.rates = ESW_I2S_RATES,
