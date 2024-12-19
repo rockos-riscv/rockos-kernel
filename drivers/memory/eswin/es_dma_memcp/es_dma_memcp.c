@@ -566,6 +566,7 @@ static struct file_operations esw_memcp_fops = {
 static struct miscdevice esw_memcp_miscdev = {
     .minor         = MISC_DYNAMIC_MINOR,
     .name          = DRIVER_NAME,
+    .mode          = 0666,
     .fops          = &esw_memcp_fops,
 };
 
