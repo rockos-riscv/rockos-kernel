@@ -395,7 +395,7 @@
 	status = "okay";
 };
 &d1_ipc_scpu {
-	status = "disabled";
+	status = "okay";
 };
 
 &d0_lpcpu {
