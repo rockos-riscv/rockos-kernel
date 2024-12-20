@@ -321,6 +321,8 @@
 			numa-node-id = <0>;
 		};
 		D0CACHE: cache-controller@2010000 {
+			#address-cells = <2>;
+			#size-cells = <2>;
 			cache-block-size = <64>;
 			cache-level = <3>;
 			cache-sets = <4096>;
@@ -338,6 +340,11 @@
 			sifive,max-master-id = <13>;
 			sifive,perfmon-counters = <6>;
 			numa-node-id = <0>;
+			ranges;
+			zero-device@1a000000 {
+				compatible = "l3,zero-device";
+				reg = <0x0 0x1a000000 0x0 0x400000>;
+			};
 		};
 		L34: debug-controller@0 {
 			compatible = "sifive,debug-100", "riscv,debug-100";
