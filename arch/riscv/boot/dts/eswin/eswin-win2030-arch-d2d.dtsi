@@ -309,6 +309,8 @@
 	};
 
 	D1CACHE: cache-controller@22010000 {
+		#address-cells = <2>;
+		#size-cells = <2>;
 		cache-block-size = <64>;
 		cache-level = <3>;
 		cache-sets = <4096>;
@@ -327,6 +329,7 @@
 		sifive,max-master-id = <13>;
 		sifive,perfmon-counters = <6>;
 		numa-node-id = <1>;
+		ranges;
 	};
 
 
