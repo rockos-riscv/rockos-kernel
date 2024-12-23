@@ -990,6 +990,8 @@ static int i2s_sof_ringbuffer_init(struct i2s_dev *i2s_drvdata)
 										  DSP_RB_DATA_SZIE, DMA_BIDIRECTIONAL, DMA_ATTR_SKIP_CPU_SYNC);
 	if (dma_mapping_error(i2s_drvdata->chan[1]->device->dev, i2s_drvdata->rb_in_iova)) {
 		dev_err(i2s_drvdata->dev, "dma mapping failed\n");
+		dma_unmap_page_attrs(i2s_drvdata->chan[0]->device->dev, i2s_drvdata->rb_out_iova, DSP_RB_DATA_SZIE,
+							 DMA_BIDIRECTIONAL, DMA_ATTR_SKIP_CPU_SYNC);
 		return -ENOMEM;
 	}
 	dev_dbg(i2s_drvdata->dev, "rb in iova_addr:0x%llx\n", i2s_drvdata->rb_in_iova);
@@ -1135,11 +1137,21 @@ static int i2s_remove(struct platform_device *pdev)
 {
 	struct i2s_dev *i2s_drvdata = dev_get_drvdata(&pdev->dev);
 
+	dev_info(&pdev->dev, "dev name:%s\n", pdev->dev.of_node->name);
+
 	clk_disable_unprepare(i2s_drvdata->mclk);
-
 	pm_runtime_disable(&pdev->dev);
-
 	audio_proc_module_exit();
+
+	if (of_property_read_bool(pdev->dev.of_node, "dsp_sof_enable")) {
+		dma_unmap_page_attrs(i2s_drvdata->chan[0]->device->dev, i2s_drvdata->rb_out_iova, DSP_RB_DATA_SZIE,
+							DMA_BIDIRECTIONAL, DMA_ATTR_SKIP_CPU_SYNC);
+		dma_unmap_page_attrs(i2s_drvdata->chan[1]->device->dev, i2s_drvdata->rb_in_iova, DSP_RB_DATA_SZIE,
+							DMA_BIDIRECTIONAL, DMA_ATTR_SKIP_CPU_SYNC);
+	} else {
+		kfree(i2s_drvdata->conv_buf[0]);
+		kfree(i2s_drvdata->conv_buf[1]);
+	}
 
 	return 0;
 }
