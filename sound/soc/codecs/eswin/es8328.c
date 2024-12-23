@@ -794,6 +794,13 @@ static int es8328_hw_params(struct snd_pcm_substream *substream,
 				ES8328_ADCCONTROL4_ADCWL_MASK,
 				wl << ES8328_ADCCONTROL4_ADCWL_SHIFT);
 
+	if (params_rate(params) <= 48000) {
+		snd_soc_component_update_bits(component, reg, ES8328_DACCONTROL2_DOUBLESPEED, 0);
+	} else {
+		snd_soc_component_update_bits(component, reg,
+			ES8328_DACCONTROL2_DOUBLESPEED, ES8328_DACCONTROL2_DOUBLESPEED);
+	}
+
 	return snd_soc_component_update_bits(component, reg, ES8328_RATEMASK, ratio);
 }
 
