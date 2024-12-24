@@ -29,6 +29,7 @@
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_gpio95_default>;
 	cpu-voltage-gpios = <&portc 31 GPIO_ACTIVE_HIGH>;
+	cpu-default-frequency = <CLK_FREQ_1600M>;
 };
 
 &d0_cpu_opp_table {
