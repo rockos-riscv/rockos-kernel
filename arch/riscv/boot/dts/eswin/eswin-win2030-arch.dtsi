@@ -248,6 +248,7 @@
 			riscv,event-to-mhpmevent = <0x4 0x0 0x202 0x5 0x0 0x4000 0x6 0x0 0x2001 0x10009 0x0 0x102 0x10019 0x0 0x1002 0x10021 0x0 0x802>;
 			compatible = "riscv,pmu0", "riscv,pmu";
 			interrupts-extended = <&cpu0_intc 13 &cpu1_intc 13 &cpu2_intc 13 &cpu3_intc 13>;
+			numa-node-id = <0>;
 		};
 		L40: authentication-controller {
 			compatible = "sifive,authentication0";
@@ -293,6 +294,7 @@
 			interrupts = <517>;
 			reg = <0x0 0x1700000 0x0 0x1000>;
 			reg-names = "control";
+			numa-node-id = <0>;
 		};
 		d0_bus_err1: bus-error-unit@hart1 {
 			compatible = "sifive,buserror";
@@ -300,6 +302,7 @@
 			interrupts = <518>;
 			reg = <0x0 0x1701000 0x0 0x1000>;
 			reg-names = "control";
+			numa-node-id = <0>;
 		};
 		d0_bus_err2: bus-error-unit@hart2 {
 			compatible = "sifive,buserror";
@@ -307,6 +310,7 @@
 			interrupts = <519>;
 			reg = <0x0 0x1702000 0x0 0x1000>;
 			reg-names = "control";
+			numa-node-id = <0>;
 		};
 		d0_bus_err3: bus-error-unit@hart3 {
 			compatible = "sifive,buserror";
@@ -314,6 +318,7 @@
 			interrupts = <520>;
 			reg = <0x0 0x1703000 0x0 0x1000>;
 			reg-names = "control";
+			numa-node-id = <0>;
 		};
 		D0CACHE: cache-controller@2010000 {
 			cache-block-size = <64>;
@@ -382,6 +387,7 @@
 			reg-names = "control";
 			sifive,ecc-granularity = <16>;
 			sifive,perfmon-counters = <6>;
+			numa-node-id = <0>;
 		};
 		d0_l2_cache_1: pl2@108000 {
 			cache-block-size = <64>;
@@ -395,6 +401,7 @@
 			reg-names = "control";
 			sifive,ecc-granularity = <16>;
 			sifive,perfmon-counters = <6>;
+			numa-node-id = <0>;
 		};
 		d0_l2_cache_2: pl2@10c000 {
 			cache-block-size = <64>;
@@ -408,6 +415,7 @@
 			reg-names = "control";
 			sifive,ecc-granularity = <16>;
 			sifive,perfmon-counters = <6>;
+			numa-node-id = <0>;
 		};
 		d0_l2_cache_3: pl2@110000 {
 			cache-block-size = <64>;
@@ -421,6 +429,7 @@
 			reg-names = "control";
 			sifive,ecc-granularity = <16>;
 			sifive,perfmon-counters = <6>;
+			numa-node-id = <0>;
 		};
 		L10: rom@1a000000 {
 			compatible = "ucbbar,cacheable-zero0";
