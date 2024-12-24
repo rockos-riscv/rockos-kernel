@@ -884,6 +884,7 @@ static void dsp_init_prio_array(struct es_dsp *dsp)
 	set_bit(DSP_MAX_PRIO, array->bitmap);
 }
 
+#if defined(CONFIG_PM_DEVFREQ)
 /* devfreq target function to set frequency */
 static int dsp_devfreq_target(struct device *dev, unsigned long *freq, u32 flags)
 {
@@ -914,6 +915,7 @@ static struct devfreq_dev_profile dsp_devfreq_profile = {
 	.target = dsp_devfreq_target,
 	.get_cur_freq = dsp_devfreq_get_cur_freq,
 };
+#endif
 
 static int32_t  dsp_probe_result = 0;
 static int es_dsp_hw_probe(struct platform_device *pdev)
@@ -921,7 +923,9 @@ static int es_dsp_hw_probe(struct platform_device *pdev)
 	int ret;
 	char nodename[sizeof("es-dsp") + 3 * sizeof(int)];
 	struct es_dsp *dsp;
+#if defined(CONFIG_PM_DEVFREQ)
 	struct devfreq *df;
+#endif
 
 	dsp = devm_kzalloc(&pdev->dev,
 			   sizeof(*dsp) + sizeof(struct es_dsp_stats) +
@@ -989,6 +993,7 @@ static int es_dsp_hw_probe(struct platform_device *pdev)
 		goto err_mbox_clk;
 	}
 
+#if defined(CONFIG_PM_DEVFREQ)
 	/* Add OPP table from device tree */
 	ret = dev_pm_opp_of_add_table(&pdev->dev);
 	if (ret) {
@@ -999,8 +1004,10 @@ static int es_dsp_hw_probe(struct platform_device *pdev)
 	df = devm_devfreq_add_device(&pdev->dev, &dsp_devfreq_profile, "userspace", NULL);
 	if (IS_ERR(df)) {
 		dsp_err("%s, %d, add devfreq failed\n", __func__, __LINE__);
+		ret = PTR_ERR(df);
 		goto err_dsp_devfreq;
 	}
+#endif
 
 	ret = es_dsp_clk_enable(dsp);
 	if (ret) {
@@ -1063,8 +1070,10 @@ err_hw_init:
 err_tbu_power:
 	es_dsp_clk_disable(dsp);
 err_dsp_clk:
+#if defined(CONFIG_PM_DEVFREQ)
 	devm_devfreq_remove_device(dsp->dev, df);
 err_dsp_devfreq:
+#endif
 	dsp_disable_mbox_clock(dsp);
 err_mbox_clk:
 	es_dsp_unmap_resource(dsp);
