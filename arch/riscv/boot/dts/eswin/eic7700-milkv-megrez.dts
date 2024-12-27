@@ -763,6 +763,11 @@
 		compatible = "nxp,pcf8563";
 		reg = <0x51>;
 	};
+
+	rtc_m41t11: m41t11@68 {
+		compatible = "st,m41t11";
+		reg = <0x68>;
+	};
 };
 
 &d0_aon_i2c1 {
