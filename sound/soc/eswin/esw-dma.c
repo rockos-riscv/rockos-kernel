@@ -426,10 +426,10 @@ int esw_pcm_dma_dai_register(struct i2s_dev *chip)
 	chan0 = dma_request_chan(chip->dev, channel_names0);
 	if (IS_ERR(chan0)) {
 		if (PTR_ERR(chan0) == -EPROBE_DEFER) {
-			dev_err(chip->dev, "request dma channel[%s] failed\n", channel_names0);
+			dev_warn(chip->dev, "request dma channel[%s] failed\n", channel_names0);
 			return -EPROBE_DEFER;
 		}
-		dev_err(chip->dev, "dma channel[%s] is NULL\n", channel_names0);
+		dev_warn(chip->dev, "dma channel[%s] is NULL\n", channel_names0);
 	} else {
 		chip->chan[SNDRV_PCM_STREAM_PLAYBACK] = chan0;
 		period_bytes_max = dma_get_max_seg_size(chan0->device->dev);
@@ -444,11 +444,11 @@ int esw_pcm_dma_dai_register(struct i2s_dev *chip)
 	chan1 = dma_request_chan(chip->dev, channel_names1);
 	if (IS_ERR(chan1)) {
 		if (PTR_ERR(chan1) == -EPROBE_DEFER) {
-			dev_err(chip->dev, "request dma channel[%s] failed\n", channel_names1);
+			dev_warn(chip->dev, "request dma channel[%s] failed\n", channel_names1);
 			ret = -EPROBE_DEFER;
 			goto release_buf0;
 		}
-		dev_err(chip->dev, "dma channel[%s] is NULL\n", channel_names1);
+		dev_warn(chip->dev, "dma channel[%s] is NULL\n", channel_names1);
 	} else {
 		chip->chan[SNDRV_PCM_STREAM_CAPTURE] = chan1;
 		period_bytes_max = dma_get_max_seg_size(chan1->device->dev);
