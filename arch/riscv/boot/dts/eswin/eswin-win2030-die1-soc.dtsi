@@ -641,6 +641,7 @@
 			#size-cells = <2>;
 			dma-ranges = <0x0 0x80000000 0x0 0xc0000000 0x0 0x80000000>;
 			iommus = <&smmu1 WIN2030_SID_SCPU>, <&smmu1 WIN2030_SID_CRYPT>;
+			tbus = <WIN2030_TBUID_SCPU>;
 			eswin,syscfg = <&d1_sys_con SCPU_SID_REG_OFFSET 0>,
 						   <&d1_sys_con CRYPT_SID_REG_OFFSET 0>;
 			mboxes = <&d1_mbox0 0>;
