@@ -770,8 +770,9 @@ int npu_set_dsp_iobuf(struct win_executor *executor, struct host_frame_desc *f)
 					"%s, %d, offset=0x%x, dma addr=0x%x.\n",
 					__func__, __LINE__, offset,
 					f->dsp_io_dmabuf[i][j]->dma_addr);
-				*tmp = offset +
+				*tmp = offset + address[j].devBuf.offset +
 				       f->dsp_io_dmabuf[i][j]->dma_addr;
+
 				dla_debug("tmp content=0x%x.\n", *tmp);
 			}
 		}
