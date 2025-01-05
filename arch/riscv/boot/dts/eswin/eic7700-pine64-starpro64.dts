@@ -127,6 +127,7 @@
 
 &d0_clock {
 	status = "okay";
+	force-1_8ghz;
 };
 
 &d0_reset {
@@ -788,6 +789,11 @@
 &d0_cpu_opp_table {
 	opp-1600000000 {
 		opp-hz = /bits/ 64 <CLK_FREQ_1600M>;
+		opp-microvolt = <900000>;
+		clock-latency-ns = <70000>;
+	};
+	opp-1800000000 {
+		opp-hz = /bits/ 64 <CLK_FREQ_1800M>;
 		opp-microvolt = <900000>;
 		clock-latency-ns = <70000>;
 	};
