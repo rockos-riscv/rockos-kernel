@@ -183,7 +183,7 @@ static unsigned int dewarp_poll(struct file *filp, poll_table *wait)
 	return mask;
 }
 
-int obtain_dewarp_mis(struct device *dev)
+static int obtain_dewarp_mis(struct device *dev)
 {
 	struct es_dewarp_driver_dev *pdriver_dev = dev_get_drvdata(dev);
 	struct dw200_subdev *pdwe_dev;
@@ -1120,6 +1120,16 @@ static int vvcam_sys_clk_config(dw_clk_rst_t *dw_crg)
 		return ret;
 	}
 
+	rate = clk_round_rate(dw_crg->aclk, VVCAM_AXI_CLK_HIGHEST);
+	if (rate > 0) {
+		ret = clk_set_rate(dw_crg->aclk, rate);
+		if (ret) {
+			pr_err("DW: failed to set aclk: %d\n", ret);
+			return ret;
+		}
+		pr_info("DW set aclk to %ldHZ\n", rate);
+	}
+
 	rate = clk_round_rate(dw_crg->dw_aclk, VVCAM_DW_CLK_HIGHEST);
 	if (rate > 0) {
 		ret = clk_set_rate(dw_crg->dw_aclk, rate);
@@ -1146,7 +1156,7 @@ static int vvcam_sys_clk_prepare(dw_clk_rst_t *dw_crg)
 	return 0;
 }
 
-int vvcam_sys_clk_unprepare(dw_clk_rst_t *dw_crg)
+static int vvcam_sys_clk_unprepare(dw_clk_rst_t *dw_crg)
 {
 	int ret = 0;
 	//  tbu power down need enanle clk
@@ -1264,6 +1274,7 @@ static int es_dewarp_probe(struct platform_device *pdev)
 	struct es_dewarp_driver_dev *pdriver_dev;
 	struct dw200_subdev *pdwe_dev;
 	char debug_dw200_reset[64] = "dw200_reset";
+	struct devfreq *df;
 	int id = 0;
 
 	if (pdev->id >= NUM_DEVICES) {
