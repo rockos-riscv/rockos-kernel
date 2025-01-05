@@ -731,35 +731,36 @@ static int32_t __exit edla_remove(struct platform_device *pdev)
 
 int __maybe_unused npu_runtime_suspend(struct device *dev)
 {
-	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
+	struct nvdla_device *ndev = dev_get_drvdata(dev);
 	int ret;
 
-	if (!nvdla_dev) {
-		dla_error("%s, %d, nvdla_dev is null.\n", __func__, __LINE__);
+	if (!ndev) {
+		dla_error("%s, %d, ndev is null.\n", __func__, __LINE__);
 		return -EIO;
 	}
-	npu_tbu_power(dev, false);
-	ret = npu_disable_clock(nvdla_dev);
-	dla_debug("%s, %d, ret=%d.\n", __func__, __LINE__, ret);
 
+	npu_tbu_power(dev, false);
+	ret = npu_disable_clock(ndev);
+	dla_debug("%s, %d, ret=%d.\n", __func__, __LINE__, ret);
 	return ret;
 }
+
 int __maybe_unused npu_runtime_resume(struct device *dev)
 {
-	struct nvdla_device *nvdla_dev = dev_get_drvdata(dev);
+	struct nvdla_device *ndev = dev_get_drvdata(dev);
 	int ret;
 
-	if (!nvdla_dev) {
-		dla_error("%s, %d, nvdla_dev is null.\n", __func__, __LINE__);
+	if (!ndev) {
+		dla_error("%s, %d, ndev is null.\n", __func__, __LINE__);
 		return -EIO;
 	}
-	ret = npu_enable_clock(nvdla_dev);
-	if (ret) {
-		dla_error("%s, %d, enable clock err, ret = %d.\n", __func__, __LINE__, ret);
-		return ret;
-	}
+	ret = npu_enable_clock(ndev);
+    if (ret) {
+        dla_error("%s, %d, enable clock err, ret = %d.\n", __func__, __LINE__, ret);
+        return ret;
+    }
 	npu_tbu_power(dev, true);
-
+	dla_debug("%s, %d, ret=%d.\n", __func__, __LINE__, ret);
 	return ret;
 }
 
@@ -833,7 +834,9 @@ int __maybe_unused npu_resume(struct device *dev)
 		dla_error("hardware reset error, ret=%d.\n", ret);
 		return -EIO;
 	}
+
 	pm_runtime_get_noresume(dev);
+
 	ret = npu_init_reset(nvdla_dev);
 	if (ret < 0) {
 		goto err_reset;
@@ -846,7 +849,7 @@ int __maybe_unused npu_resume(struct device *dev)
 	npu_tbu_power(dev, true);
 	/* config streamID of NPU_DMA */
 
-	ret = npu_e31_load_fw(nvdla_dev->pdev, nvdla_dev->e31_mmio_base);
+	ret = npu_e31_load_fw(nvdla_dev);
 	if (ret) {
 		dev_err(dev, "load e31 fw error.\n");
 		goto err_load_firm;
