@@ -2743,6 +2743,7 @@ static void dw_hdmi_update_power(struct dw_hdmi *hdmi)
 			struct edid *edid;
 			edid = dw_hdmi_get_edid(hdmi, &hdmi->connector);
 			dw_hdmi_poweron(hdmi);
+			kfree(edid);
 		}
 	}
 }
