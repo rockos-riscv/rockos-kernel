@@ -2055,6 +2055,7 @@
 			#size-cells = <2>;
 			reg = <0x0 0x51030000 0x0 0x10000>;
 			numa-node-id = <0>;
+			tbus = <WIN2030_TBUID_ISP>;
 		};
 
 
