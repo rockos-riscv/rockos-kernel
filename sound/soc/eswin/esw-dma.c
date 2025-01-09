@@ -429,6 +429,7 @@ int esw_pcm_dma_dai_register(struct i2s_dev *chip)
 			dev_warn(chip->dev, "request dma channel[%s] failed\n", channel_names0);
 			return -EPROBE_DEFER;
 		}
+		chip->chan[SNDRV_PCM_STREAM_PLAYBACK] = NULL;
 		dev_warn(chip->dev, "dma channel[%s] is NULL\n", channel_names0);
 	} else {
 		chip->chan[SNDRV_PCM_STREAM_PLAYBACK] = chan0;
@@ -448,6 +449,7 @@ int esw_pcm_dma_dai_register(struct i2s_dev *chip)
 			ret = -EPROBE_DEFER;
 			goto release_buf0;
 		}
+		chip->chan[SNDRV_PCM_STREAM_CAPTURE] = NULL;
 		dev_warn(chip->dev, "dma channel[%s] is NULL\n", channel_names1);
 	} else {
 		chip->chan[SNDRV_PCM_STREAM_CAPTURE] = chan1;
@@ -475,11 +477,13 @@ int esw_pcm_dma_dai_register(struct i2s_dev *chip)
 release_buf1:
 	kfree(chip->conv_buf[1]);
 release_chan1:
-	dma_release_channel(chip->chan[1]);
+	if (chip->chan[1])
+		dma_release_channel(chip->chan[1]);
 release_buf0:
 	kfree(chip->conv_buf[0]);
 release_chan0:
-	dma_release_channel(chip->chan[0]);
+	if (chip->chan[0])
+		dma_release_channel(chip->chan[0]);
 
 	return ret;
 }
