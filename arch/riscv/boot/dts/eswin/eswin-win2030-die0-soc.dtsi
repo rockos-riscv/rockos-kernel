@@ -347,33 +347,6 @@
 			};
 		};
 
-		d0_dmac0: dma-controller-hsp@0x50430000 {
-			compatible = "eswin,eic770x-axi-dma";
-			reg = <0x0 0x50430000 0x0 0x10000>;
-			interrupt-parent = <&plic0>;
-			interrupts = <57>;
-			#dma-cells = <2>; // change dma-cells value <1> to <2>, to support peripheral selection dma-controller,See the parameter dmas for details;
-			clocks = <&d0_clock WIN2030_CLK_HSP_DMA0_CLK>,
-					 <&d0_clock WIN2030_CLK_HSP_DMA0_CLK_TEST>;
-			clock-names = "core-clk", "cfgr-clk";
-			resets = <&d0_reset HSPDMA_RST_CTRL SW_HSP_DMA0_RSTN>,
-				<&d0_reset HSPDMA_RST_CTRL SW_HSP_DMA_PRSTN>;
-			reset-names = "arst", "prst";
-			dma-channels = <12>;
-			snps,dma-masters = <1>;
-			snps,priority = <0 1 2 3 4 5 6 7 8 9 10 11>;
-			snps,data-width = <2>;
-			snps,block-size = <0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000>;
-			snps,axi-max-burst-len = <16>;
-			snps,max-msize = <64>;
-			iommus = <&smmu0 WIN2030_SID_DMA0>;
-			tbus = <WIN2030_TBUID_DMA0>;
-			eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x104c>;
-			eswin,syscfg = <&d0_sys_con DMA1_SID_REG_OFFSET 0x370>;
-			numa-node-id = <0>;
-			dma-noncoherent;
-		};
-
 		d0_aon_dmac: dma-controller-aon@0x518c0000 {
 			compatible = "eswin,eic770x-axi-dma";
 			reg = <0x0 0x518c0000 0x0 0x10000>;
@@ -398,6 +371,33 @@
 			dma-ranges = <0x0 0x80000000 0x0 0x80000000 0x100 0x0>;
 			iommus = <&smmu0 WIN2030_SID_DMA1>;
 			tbus = <WIN2030_TBUID_DMA1>;
+			eswin,syscfg = <&d0_sys_con DMA1_SID_REG_OFFSET 0x370>;
+			numa-node-id = <0>;
+			dma-noncoherent;
+		};
+
+		d0_dmac0: dma-controller-hsp@0x50430000 {
+			compatible = "eswin,eic770x-axi-dma";
+			reg = <0x0 0x50430000 0x0 0x10000>;
+			interrupt-parent = <&plic0>;
+			interrupts = <57>;
+			#dma-cells = <2>; // change dma-cells value <1> to <2>, to support peripheral selection dma-controller,See the parameter dmas for details;
+			clocks = <&d0_clock WIN2030_CLK_HSP_DMA0_CLK>,
+					 <&d0_clock WIN2030_CLK_HSP_DMA0_CLK_TEST>;
+			clock-names = "core-clk", "cfgr-clk";
+			resets = <&d0_reset HSPDMA_RST_CTRL SW_HSP_DMA0_RSTN>,
+				<&d0_reset HSPDMA_RST_CTRL SW_HSP_DMA_PRSTN>;
+			reset-names = "arst", "prst";
+			dma-channels = <12>;
+			snps,dma-masters = <1>;
+			snps,priority = <0 1 2 3 4 5 6 7 8 9 10 11>;
+			snps,data-width = <2>;
+			snps,block-size = <0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000 0x80000>;
+			snps,axi-max-burst-len = <16>;
+			snps,max-msize = <64>;
+			iommus = <&smmu0 WIN2030_SID_DMA0>;
+			tbus = <WIN2030_TBUID_DMA0>;
+			eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x104c>;
 			eswin,syscfg = <&d0_sys_con DMA1_SID_REG_OFFSET 0x370>;
 			numa-node-id = <0>;
 			dma-noncoherent;
