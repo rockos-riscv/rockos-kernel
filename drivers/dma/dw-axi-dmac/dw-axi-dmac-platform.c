@@ -1415,23 +1415,42 @@ int win2030_dma_sel_cfg(struct axi_dma_chan *chan, u32 val)
 	return 0;
 }
 
+static bool axi_dma_filter_fn(struct dma_chan *dchan, void *param)
+{
+	struct axi_dma_filter_data *fdata = param;
+
+	if (dchan->device->dev != fdata->dw_dma->dma.dev)
+		return false;
+
+	if (fdata->request != dchan->chan_id)
+		return false;
+
+	return true;
+}
+
 static struct dma_chan *dw_axi_dma_of_xlate(struct of_phandle_args *dma_spec,
 					    struct of_dma *ofdma)
 {
 	struct dw_axi_dma *dw = ofdma->of_dma_data;
 	struct axi_dma_chan *chan;
 	struct dma_chan *dchan;
+	struct axi_dma_filter_data fdata;
 
-	dchan = dma_get_any_slave_channel(&dw->dma);
-	if (!dchan)
+	fdata.dw_dma = dw,
+	fdata.request = dma_spec->args[0];
+
+	dchan = dma_request_channel(dw->dma.cap_mask, axi_dma_filter_fn, &fdata);
+	if (!dchan) {
+		dev_err(dw->dma.dev, "request chan failed\n");
 		return NULL;
+	}
 
 	chan = dchan_to_axi_dma_chan(dchan);
-	chan->hw_handshake_num = dma_spec->args[0];
+	chan->hw_handshake_num = dma_spec->args[1];
 	int flags = (uintptr_t)of_device_get_match_data(chan->chip->dev);
 	if (flags & AXI_DMA_FLAG_HAS_EIC7700) {
 		if (dma_spec->args_count > 1)
-			win2030_dma_sel_cfg(chan, dma_spec->args[1]);
+			win2030_dma_sel_cfg(chan, dma_spec->args[2]);
 	}
 	return dchan;
 }
