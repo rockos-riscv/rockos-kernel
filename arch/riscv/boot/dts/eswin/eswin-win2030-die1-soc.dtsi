@@ -322,7 +322,7 @@
 			reg = <0x0 0x718c0000 0x0 0x10000>;
 			interrupt-parent = <&plic1>;
 			interrupts = <289>;
-			#dma-cells = <2>; // change dma-cells value <1> to <2>, to support peripheral selection dma-controller,See the parameter dmas for details;
+			#dma-cells = <3>; // dma-cells <request channel id, handshake number, dma sel bit>;
 			clocks = <&d1_clock WIN2030_CLK_AONDMA_ACLK>,
 				 <&d1_clock WIN2030_CLK_AONDMA_CFG>;
 			clock-names = "core-clk", "cfgr-clk";
@@ -351,7 +351,7 @@
 			reg = <0x0 0x70430000 0x0 0x10000>;
 			interrupt-parent = <&plic1>;
 			interrupts = <57>;
-			#dma-cells = <2>; // change dma-cells value <1> to <2>, to support peripheral selection dma-controller,See the parameter dmas for details;
+			#dma-cells = <3>; // dma-cells <request channel id, handshake number, dma sel bit>;
 			clocks = <&d1_clock WIN2030_CLK_HSP_DMA0_CLK>,
 					 <&d1_clock WIN2030_CLK_HSP_DMA0_CLK_TEST>;
 			clock-names = "core-clk", "cfgr-clk";
@@ -746,7 +746,7 @@
 				* 24 : i2c0  aon dma handshake number
 				* 6 : i2c0 dma controller sel bit in sys_son dma_cfg reg(offset 0x370)
 				*/
-				dmas = <&d1_aon_dmac 24 6>, <&d1_aon_dmac 25 6>;
+				dmas = <&d1_aon_dmac 10 24 6>, <&d1_aon_dmac 11 25 6>;
 				numa-node-id = <1>;
 		};
 		d1_i2c1: i2c@70960000 {
@@ -920,7 +920,7 @@
 				* 41 : i2c0 aon dma handshake number
 				* 0xff : no need to select to dma controller
 				*/
-				dmas = <&d1_aon_dmac 41 0xff>, <&d1_aon_dmac 42 0xff>;
+				dmas = <&d1_aon_dmac 12 41 0xff>, <&d1_aon_dmac 13 42 0xff>;
 				numa-node-id = <1>;
 		};
 		d1_aon_i2c1: i2c@71838000 {
@@ -1253,7 +1253,7 @@
 			#sound-dai-cells = <0x00000000>;
 			reg = <0x0 0x70200000 0x0 0x10000>;
 			dma-names = "rx", "tx";
-			dmas = <&d1_aon_dmac 4 0>, <&d1_aon_dmac 5 0>;
+			dmas = <&d1_aon_dmac 4 4 0>, <&d1_aon_dmac 5 5 0>;
 			vo_mclk_sel,syscrg = <&d1_sys_crg 0x1bc>;
 			resets = <&d1_reset VO_I2SRST_CTRL SW_VO_I2S_RSTN>,
 				<&d1_reset VO_I2SRST_CTRL SW_VO_I2S_PRSTN>,
@@ -1273,7 +1273,7 @@
 			#sound-dai-cells = <0x00000000>;
 			reg = <0x0 0x70210000 0x0 0x10000>;
 			dma-names = "rx", "tx";
-			dmas = <&d1_aon_dmac 2 1>, <&d1_aon_dmac 3 1>;
+			dmas = <&d1_aon_dmac 6 2 1>, <&d1_aon_dmac 7 3 1>;
 			vo_mclk_sel,syscrg = <&d1_sys_crg 0x1bc>;
 			resets = <&d1_reset VO_I2SRST_CTRL SW_VO_I2S_RSTN>,
 				<&d1_reset VO_I2SRST_CTRL SW_VO_I2S_PRSTN>,
@@ -1293,7 +1293,7 @@
 			#sound-dai-cells = <0x00000000>;
 			reg = <0x0 0x70220000 0x0 0x10000>;
 			dma-names = "rx", "tx";
-			dmas = <&d1_aon_dmac 0 2>, <&d1_aon_dmac 1 2>;
+			dmas = <&d1_aon_dmac 8 0 2>, <&d1_aon_dmac 9 1 2>;
 			vo_mclk_sel,syscrg = <&d1_sys_crg 0x1bc>;
 			resets = <&d1_reset VO_I2SRST_CTRL SW_VO_I2S_RSTN>,
 				<&d1_reset VO_I2SRST_CTRL SW_VO_I2S_PRSTN>,

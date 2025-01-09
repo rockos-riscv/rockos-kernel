@@ -95,6 +95,11 @@ struct axi_dma_chip {
 	spinlock_t lock;
 };
 
+struct axi_dma_filter_data {
+	struct dw_axi_dma *dw_dma;
+	int request;
+};
+
 /* LLI == Linked List Item */
 struct __packed axi_dma_lli {
 	__le64		sar;
