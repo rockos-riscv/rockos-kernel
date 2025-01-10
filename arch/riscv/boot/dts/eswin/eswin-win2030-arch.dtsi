@@ -331,7 +331,6 @@
 			compatible = "sifive,ccache1", "cache", "sifive,fu740-c000-ccache";
 			interrupt-parent = <&plic0>;
 			interrupts = <1>, <3>, <4>, <2>;
-			next-level-cache = <&L9 &L10 &L11>;
 			reg = <0x0 0x2010000 0x0 0x4000 0x0 0x8000000 0x0 0x400000>;
 			reg-names = "control", "sideband";
 			sifive,a-mshr-count = <60>;
