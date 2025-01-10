@@ -875,7 +875,7 @@ GPIO USED ON CarrierBoard:
 	cpu-voltage-gpios = <&portc 30 GPIO_ACTIVE_HIGH>;
 };
 
-&cpu_opp_table {
+&d0_cpu_opp_table {
 	opp-1500000000 {
 		opp-hz = /bits/ 64 <CLK_FREQ_1500M>;
 		opp-microvolt = <900000>;
