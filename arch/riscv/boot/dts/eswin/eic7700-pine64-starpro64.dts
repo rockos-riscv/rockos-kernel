@@ -850,7 +850,7 @@
 	apply_npu_high_freq;
 };
 
-&cpu_opp_table {
+&d0_cpu_opp_table {
 	opp-1600000000 {
 		opp-hz = /bits/ 64 <CLK_FREQ_1600M>;
 		opp-microvolt = <900000>;
