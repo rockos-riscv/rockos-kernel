@@ -24,39 +24,41 @@
 
 &L64 {
 	cpu-map {
-	#if (CHIPLET_AND_DIE & 0x2)
-		cluster0 {
-			core0 {
-				cpu = <&cpu_0>;
+		//socket0 {
+			#if (CHIPLET_AND_DIE & 0x2)
+			cluster0 {
+				core0 {
+					cpu = <&cpu_0>;
+				};
+				core1 {
+					cpu = <&cpu_1>;
+				};
+				core2 {
+					cpu = <&cpu_2>;
+				};
+				core3 {
+					cpu = <&cpu_3>;
+				};
 			};
-			core1 {
-				cpu = <&cpu_1>;
-			};
-			core2 {
-				cpu = <&cpu_2>;
-			};
-			core3 {
-				cpu = <&cpu_3>;
-			};
-		};
-	#endif
-		cluster1 {
-			core0 {
-				cpu = <&cpu_4>;
-			};
-		#ifndef PLATFORM_HAPS
-			core1 {
-				cpu = <&cpu_5>;
-			};
-			core2 {
-				cpu = <&cpu_6>;
-			};
-			core3 {
-				cpu = <&cpu_7>;
-			};
-		#endif
-		};
+			#endif
+		//};
 
+		//socket1 {
+			cluster1 {
+				core0 {
+					cpu = <&cpu_4>;
+				};
+				core1 {
+					cpu = <&cpu_5>;
+				};
+				core2 {
+					cpu = <&cpu_6>;
+				};
+				core3 {
+					cpu = <&cpu_7>;
+				};
+			};
+		//};
 	};
 
 	cpu_4: cpu@4 {
@@ -319,8 +321,6 @@
 		compatible = "sifive,ccache1", "cache", "sifive,fu740-c000-ccache";
 		interrupt-parent = <&plic1>;
 		interrupts = <1>, <3>, <4>, <2>;
-		//next-level-cache = <&L9 &L10 &L11 &D2MEM>;
-		next-level-cache = <&L9 &L10 &L11>;
 		reg = <0x0 0x22010000 0x0 0x4000 0x0 0x8000000 0x0 0x400000>;
 		reg-names = "control", "sideband";
 		sifive,a-mshr-count = <60>;

@@ -333,8 +333,35 @@ PVRSRV_ERROR OSPhyContigPagesMap(PHYS_HEAP *psPhysHeap, PG_HANDLE *psMemHandle,
 						void **pvPtr)
 {
 	size_t actualSize = 1 << (PAGE_SHIFT + psMemHandle->uiOrder);
+	#if (!MAP_UNCACHED_MEM)
 	*pvPtr = kmap((struct page*)psMemHandle->u.pvHandle);
+	#else
+	PVRSRV_DEVICE_NODE *psDevNode = PhysHeapDeviceNode(psPhysHeap);
+	struct device *psDev = psDevNode->psDevConfig->pvOSDevice;
+	struct page *page = (struct page*)psMemHandle->u.pvHandle;
+	unsigned long i, num_pages = PAGE_ALIGN(actualSize) / PAGE_SIZE;
+	struct page **pages = kmalloc_node(sizeof(struct page *) * num_pages, GFP_KERNEL, dev_to_node(psDev));
+	struct page **tmp = pages;
+	pgprot_t prot = PAGE_KERNEL;
+	void *vaddr;
 
+	if (page_to_nid(page) != dev_to_node(psDev)) {
+		pr_warn("%s: mem(phys 0x%llx size 0x%lx) and dev are not on the same die\n", __func__,
+			page_to_phys(page) ,uiSize);
+	}
+
+	for (i = 0; i < num_pages; ++i)
+		*tmp++ = page++;
+
+	prot = pgprot_dmacoherent(PAGE_KERNEL);
+	vaddr = vmap(pages, num_pages, VM_MAP, prot);
+	kfree(pages);
+
+	if (!vaddr)
+		return PVRSRV_ERROR_OUT_OF_MEMORY;
+
+	*pvPtr = vaddr;
+	#endif
 	PVR_UNREFERENCED_PARAMETER(psDevPAddr);
 
 	PVR_UNREFERENCED_PARAMETER(actualSize); /* If we don't take an #ifdef path */
@@ -380,7 +407,11 @@ void OSPhyContigPagesUnmap(PHYS_HEAP *psPhysHeap, PG_HANDLE *psMemHandle, void *
 	PVR_UNREFERENCED_PARAMETER(psPhysHeap);
 	PVR_UNREFERENCED_PARAMETER(pvPtr);
 
+	#if (!MAP_UNCACHED_MEM)
 	kunmap((struct page*) psMemHandle->u.pvHandle);
+	#else
+	vunmap(pvPtr);
+	#endif
 }
 
 PVRSRV_ERROR OSPhyContigPagesClean(PHYS_HEAP *psPhysHeap,
@@ -388,6 +419,7 @@ PVRSRV_ERROR OSPhyContigPagesClean(PHYS_HEAP *psPhysHeap,
                                    IMG_UINT32 uiOffset,
                                    IMG_UINT32 uiLength)
 {
+	#if (!MAP_UNCACHED_MEM)
 	PVRSRV_DEVICE_NODE *psDevNode = PhysHeapDeviceNode(psPhysHeap);
 	PVRSRV_ERROR eError = PVRSRV_OK;
 	struct page* psPage = (struct page*) psMemHandle->u.pvHandle;
@@ -428,6 +460,10 @@ e0:
 	kunmap(psPage);
 
 	return eError;
+	#else
+	return PVRSRV_OK;
+	#endif
+
 }
 
 #if defined(__GNUC__)
