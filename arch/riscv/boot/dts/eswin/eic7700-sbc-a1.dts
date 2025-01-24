@@ -265,6 +265,7 @@
 &d0_npu{
 	status = "okay";
 	npu-supply=<&npu_vcc1>;
+	apply_npu_1G_freq;
 };
 
 &d0_dsp_subsys {

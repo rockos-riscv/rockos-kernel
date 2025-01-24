@@ -788,34 +788,6 @@ static int llc_clk_set_parent(struct platform_device *pdev)
 			return ret;
 		}
 	}
-	if (0 == spram->is_low_freq)
-	{
-		ret = regulator_set_voltage(spram->npu_regulator, NPU_1P5G_VOLTAGE, NPU_1P5G_VOLTAGE);
-		if (0 != ret) {
-			dev_err(dev, "set volt:%duV ret:%d.\n", NPU_1P5G_VOLTAGE, ret);
-			return -EINVAL;
-		}
-		mdelay(10);
-		ret = clk_set_parent(spram->mux_u_npu_core_3mux1_gfree,
-							 spram->fixed_rate_clk_spll1_fout1);
-	}
-	else
-	{
-		if (((NULL != spram->npu_regulator)) && (!IS_ERR(spram->npu_regulator))) {
-			regulator_set_voltage(spram->npu_regulator, NPU_DEFAULT_VOLTAGE, NPU_DEFAULT_VOLTAGE);
-			dev_dbg(dev, "name:%s, volt:%d, ret:%d\n", pdev->name, NPU_DEFAULT_VOLTAGE, ret);
-			mdelay(10);
-		}
-		ret = clk_set_parent(spram->mux_u_npu_core_3mux1_gfree,
-							 spram->fixed_rate_clk_spll2_fout2);
-	}
-
-	if (ret)
-	{
-		dev_err(&pdev->dev, "failed to set mux_u_npu_core_3mux1_gfree parent: %d\n",
-				ret);
-		return ret;
-	}
 	return 0;
 }
 static int llc_clk_set_frq(struct platform_device *pdev)
@@ -833,43 +805,6 @@ static int llc_clk_set_frq(struct platform_device *pdev)
 	{
 		dev_err(&pdev->dev, "failed to set aclk: %d\n", ret);
 		return ret;
-	}
-
-	if (0 == spram->is_low_freq)
-	{
-		rate = clk_round_rate(spram->llc_clk, NPU_LLC_CLK_1P5G_RATE);
-		ret = clk_set_rate(spram->llc_clk, rate);
-
-		if (ret != 0)
-		{
-			dev_err(&pdev->dev, "failed to set llc_clk: %d\n", ret);
-			return ret;
-		}
-		rate = clk_round_rate(spram->core_clk, NPU_CORE_CLK_1P5G_RATE);
-		ret = clk_set_rate(spram->core_clk, rate);
-		if (ret != 0)
-		{
-			dev_err(&pdev->dev, "failed to set core_clk: %d\n", ret);
-			return ret;
-		}
-	}
-	else
-	{
-		rate = clk_round_rate(spram->llc_clk, NPU_LLC_CLK_RATE);
-
-		ret = clk_set_rate(spram->llc_clk, rate);
-		if (ret != 0)
-		{
-			dev_err(&pdev->dev, "failed to set llc_clk: %d\n", ret);
-			return ret;
-		}
-		rate = clk_round_rate(spram->core_clk, NPU_CORE_CLK_RATE);
-		ret = clk_set_rate(spram->core_clk, rate);
-		if (ret != 0)
-		{
-			dev_err(&pdev->dev, "failed to set core_clk: %d\n", ret);
-			return ret;
-		}
 	}
 
 	return 0;
