@@ -444,10 +444,13 @@ static void dsp_hw_complete_task(struct device *dev, dsp_request_t *req)
 		list_add_tail(&async_task->async_ll,
 			      &dsp_file->async_ll_complete);
 		spin_unlock_irqrestore(&dsp_file->async_ll_lock, flags);
+
 		wake_up_interruptible(&dsp_file->async_ll_wq);
 	} else {
 		spin_unlock_irqrestore(&dsp_file->async_ll_lock, flags);
+		kernel_handle_release_family(&async_task->handle);
 		kernel_handle_decref(&async_task->handle);
+
 	}
 
 	spin_lock_irqsave(&dsp->complete_lock, flags);
