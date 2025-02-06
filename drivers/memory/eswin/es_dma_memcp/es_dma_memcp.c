@@ -169,12 +169,12 @@ int esw_memcp_alloc_dma(struct esw_cmdq_task *task)
     dma_cap_set(DMA_MEMCPY, mask);
 
     dma_ch = dma_request_channel(mask, filter, &params);
-    if (IS_ERR(dma_ch)) {
+    if (!dma_ch) {
         pr_warn("dma request channel failed, Try using any of them.\n");
         dma_ch = dma_request_channel(mask, NULL, NULL);
     }
 
-    if (IS_ERR(dma_ch)) {
+    if (!dma_ch) {
         pr_err("dma request channel failed\n");
         return -ENODEV;
     }
