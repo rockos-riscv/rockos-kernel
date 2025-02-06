@@ -313,7 +313,7 @@ static int dsp_ioctl_set_flat(struct dsp_file *dsp_file, dsp_ioctl_task_s *req,
 	}
 	return 0;
 err:
-	dsp_unmap_dmabuf(dsp_file, dma_entry, i - 1);
+	dsp_unmap_dmabuf(dsp_file, dma_entry, i);
 	return -EINVAL;
 }
 
@@ -476,7 +476,6 @@ static struct dsp_user_req_async *dsp_set_task_info(struct dsp_file *dsp_file,
 	user = dsp_find_user_by_fd(dsp_file, task->task.operatorHandle);
 	if (!user) {
 		dsp_err("cannot get user.\n");
-		module_put(THIS_MODULE);
 		return NULL;
 	}
 
@@ -488,7 +487,6 @@ static struct dsp_user_req_async *dsp_set_task_info(struct dsp_file *dsp_file,
 			   GFP_KERNEL);
 	if (!user_req) {
 		kernel_handle_decref(&user->h);
-		module_put(THIS_MODULE);
 		dsp_err("kmalloc dsp request struct error.\n");
 		return NULL;
 	}
@@ -499,7 +497,6 @@ static struct dsp_user_req_async *dsp_set_task_info(struct dsp_file *dsp_file,
 		dsp_err("init async task khandle error.\n");
 		kernel_handle_decref(&user->h);
 		kfree(user_req);
-		module_put(THIS_MODULE);
 		return NULL;
 	}
 
@@ -540,9 +537,6 @@ err_req:
 	kernel_handle_release_family(&user_req->handle);
 	kernel_handle_decref(&user_req->handle);
 	kernel_handle_decref(&user->h);
-	if (need_notify) {
-		module_put(THIS_MODULE);
-	}
 	return NULL;
 }
 
@@ -605,6 +599,7 @@ static long dsp_ioctl_submit_tsk_async(struct file *flip,
 	user_req = dsp_set_task_info(dsp_file, task, true);
 	if (user_req == NULL) {
 		dsp_err("%s, %d, err\n", __func__, __LINE__);
+		module_put(THIS_MODULE);
 		return -EIO;
 	}
 	req.task.taskHandle = user_req->handle.fd;
@@ -623,6 +618,7 @@ static long dsp_ioctl_submit_tsk_async(struct file *flip,
 	return 0;
 err_task:
 	dsp_free_task(dsp_file, user_req);
+	module_put(THIS_MODULE);
 	return ret;
 }
 
@@ -1042,6 +1038,11 @@ static long dsp_ioctl_multi_tasks_submit(struct file *flip,
 		ret = -EINVAL;
 		return ret;
 	}
+	if (dsp->off) {
+		dsp_err("es dsp off.\n");
+		ret = -ENODEV;
+		return ret;
+	}
 
 	if (req.task_num <= 0) {
 		dsp_err("%s, %d, task num below zero, err,\n", __func__,
@@ -1080,11 +1081,6 @@ static long dsp_ioctl_multi_tasks_submit(struct file *flip,
 	}
 	user_req[req.task_num - 1]->need_notify = true;
 
-	if (dsp->off) {
-		dsp_err("es dsp off.\n");
-		ret = -ENODEV;
-		goto free_task;
-	}
 
 	spin_lock_irqsave(&dsp->send_lock, flags);
 	for (i = 0; i < req.task_num; i++) {
@@ -1111,6 +1107,7 @@ free_task:
 			dsp_free_task(dsp_file, user_req[i]);
 	}
 	kfree(tasks);
+	module_put(THIS_MODULE);
 	return ret;
 }
 static long dsp_ioctl(struct file *flip, unsigned int cmd, unsigned long arg)
