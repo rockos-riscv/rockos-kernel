@@ -345,10 +345,12 @@ PVRSRV_ERROR OSPhyContigPagesMap(PHYS_HEAP *psPhysHeap, PG_HANDLE *psMemHandle,
 	pgprot_t prot = PAGE_KERNEL;
 	void *vaddr;
 
+	#ifdef CONFIG_NUMA
 	if (page_to_nid(page) != dev_to_node(psDev)) {
-		pr_warn("%s: mem(phys 0x%llx size 0x%lx) and dev are not on the same die\n", __func__,
-			page_to_phys(page) ,uiSize);
+		pr_warn("%s: mem node %d(phys 0x%llx size 0x%lx) and dev node %d are not on the same die\n", __func__,
+			page_to_nid(page), page_to_phys(page) ,uiSize, dev_to_node(psDev));
 	}
+	#endif
 
 	for (i = 0; i < num_pages; ++i)
 		*tmp++ = page++;
