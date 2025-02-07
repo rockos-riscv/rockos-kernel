@@ -180,6 +180,7 @@ static u32 dsp_get_dma_addr(struct es_dsp *dsp, int fd,
 	}
 	map_buf->dma_addr = dma_addr;
 	map_buf->dmabuf = dmabuf;
+	atomic_add(1, &dsp->dmabuf_mapped_cnt);
 	return dma_addr;
 
 err_attach:
@@ -203,6 +204,7 @@ static void dsp_put_dma_addr(struct es_dsp *dsp, struct dsp_dma_buf *buf)
 	dma_buf_put(dmabuf);
 	buf->dmabuf = NULL;
 	buf->attach = NULL;
+	atomic_sub(1, &dsp->dmabuf_mapped_cnt);
 }
 
 int dsp_unmap_dmabuf(struct dsp_file *dsp_file, struct dsp_dma_buf **buf,
@@ -298,10 +300,11 @@ static int dsp_ioctl_set_flat(struct dsp_file *dsp_file, dsp_ioctl_task_s *req,
 		dsp_debug("%s, i=%d, new fd=%d, offset=0x%x.\n", __func__, i,
 			  (int)req->task.dspBuffers[i].memFd,
 			  req->task.dspBuffers[i].offset);
-
 		entry = dsp_get_dma_buf_ex(dsp_file,
 					   req->task.dspBuffers[i].memFd);
 		if (entry == NULL) {
+			dsp_err("getdmabuf failed curr idx:%d, cfgcnt:%d, incnt:%d\n",i,
+			req->task.bufferCntCfg, req->task.bufferCntInput);
 			goto err;
 		}
 		dma_entry[i] = entry;
@@ -1043,7 +1046,6 @@ static long dsp_ioctl_multi_tasks_submit(struct file *flip,
 		ret = -ENODEV;
 		return ret;
 	}
-
 	if (req.task_num <= 0) {
 		dsp_err("%s, %d, task num below zero, err,\n", __func__,
 			__LINE__);
