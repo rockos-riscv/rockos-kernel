@@ -459,9 +459,11 @@
 
 &d0_npu{
 	status = "okay";
+	npu-supply=<&d0_npu_vcc>;
 };
 &d1_npu {
 	status = "okay";
+	npu-supply=<&d1_npu_vcc>;
 };
 
 &d0_dsp_subsys {
