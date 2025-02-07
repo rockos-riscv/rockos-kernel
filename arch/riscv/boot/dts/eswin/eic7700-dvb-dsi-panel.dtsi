@@ -37,8 +37,8 @@
 &dc {
 	status = "okay";
 	dc_out: port {
-		dc_out_dsi: endpoint@2 {
-			reg = <2>;
+		dc_out_dsi: endpoint@0 {
+			reg = <0>;
 			remote-endpoint = <&dsi_input>;
 		};
 	};
