@@ -1,3 +1,26 @@
+// SPDX-License-Identifier: GPL-2.0
+/******************************************************************************
+ *
+ * ESWIN hae driver
+ *
+ * Copyright 2024, Beijing ESWIN Computing Technology Co., Ltd.. All rights reserved.
+ *
+ * This program is free software: you can redistribute it and/or modify
+ * it under the terms of the GNU General Public License as published by
+ * the Free Software Foundation, version 2.
+ *
+ * This program is distributed in the hope that it will be useful,
+ * but WITHOUT ANY WARRANTY; without even the implied warranty of
+ * MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+ * GNU General Public License for more details.
+ *
+ * You should have received a copy of the GNU General Public License
+ * along with this program.  If not, see <https://www.gnu.org/licenses/>.
+ *
+ * Authors: zhilin lei <leizhilin@eswincomputing.com>
+ *
+ ***************************************************************************/
+
 /****************************************************************************
 *
 *    The MIT License (MIT)
@@ -122,7 +145,7 @@ _dmaCopy(gctPOINTER Object, gcsDMA_TRANS_INFO *Info);
 #endif
 
 #if gcdSUPPORT_DEVICE_TREE_SOURCE
-static gceSTATUS gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS *params);
+static int gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS *params);
 
 gceSTATUS
 _set_power(gcsPLATFORM *Platform, gctUINT32 DevIndex, gceCORE GPU, gctBOOL Enable);
@@ -333,6 +356,11 @@ static int gpu_remove_power_domains(struct platform_device *pdev)
             pm_runtime_disable(gpd.power_dev[i]);
             dev_pm_domain_detach(gpd.power_dev[i], true);
         }
+#if defined(CONFIG_PM_DEVFREQ)
+        if (gpd.df[i]) {
+            devm_devfreq_remove_device(gpd.dev[i], gpd.df[i]);
+        }
+#endif
     }
 
     if (gpd.num_domains == 1) {
@@ -348,8 +376,12 @@ static int gpu_add_power_domains(struct platform_device *pdev, gcsMODULE_PARAMET
     int i, j = 0;
     int num_domains = 0;
     int ret = 0;
+#if defined(CONFIG_PM_DEVFREQ)
+    struct devfreq *df;
+#endif
 
     memset(&gpd, 0, sizeof(struct gpu_power_domain));
+
     num_domains = (gpu_device.devs[0] != gcvNULL) + (gpu_device.devs[1] != gcvNULL);
     gpd.num_domains = num_domains;
 
@@ -361,6 +393,20 @@ static int gpu_add_power_domains(struct platform_device *pdev, gcsMODULE_PARAMET
     }
 
     for (i = 0; i < num_domains; i++) {
+#if defined(CONFIG_PM_DEVFREQ)
+        gpd.dev[i] = gpu_device.devs[i];
+
+        if (dev_pm_opp_of_add_table(gpd.dev[i])) {
+            gcmkPRINT("%s, %d, Failed to add OPP table", __func__, __LINE__);
+            return gcvSTATUS_INVALID_OBJECT;
+        }
+        df = devm_devfreq_add_device(gpd.dev[i], &g2d_devfreq_profile, "userspace", NULL);
+        if (IS_ERR(df)) {
+            gcmkPRINT("%s, %d, add devfreq failed", __func__, __LINE__);
+            return gcvSTATUS_INVALID_OBJECT;
+        }
+        gpd.df[i] = df;
+#endif
         if (gpd.power_dev) {
             gpd.power_dev[i] = dev_pm_domain_attach_by_id(gpu_device.devs[i], i);
             if (IS_ERR(gpd.power_dev[i]))
@@ -458,7 +504,7 @@ static int g2d_reset(struct device *dev, int dieIndex, int enable) {
     return 0;
 }
 
-static gceSTATUS gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS *params)
+static int gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS *params)
 {
     struct device_node *root = pdev->dev.of_node;
     struct resource *res;
@@ -467,9 +513,6 @@ static gceSTATUS gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS
     const char *str;
     int dieIndex = 0;
     int peerDieIndex;
-#if defined(CONFIG_PM_DEVFREQ)
-    struct devfreq *df;
-#endif
 
     gcmSTATIC_ASSERT(gcvCORE_COUNT == gcmCOUNTOF(core_names),
                      "core_names array does not match core types");
@@ -607,18 +650,7 @@ static gceSTATUS gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS
     }
 
     g2d_reset(&pdev->dev, dieIndex, 1);
-#if defined(CONFIG_PM_DEVFREQ)
-    if (dev_pm_opp_of_add_table(&pdev->dev)) {
-        gcmkPRINT("%s, %d, Failed to add OPP table", __func__, __LINE__);
-        return gcvSTATUS_INVALID_OBJECT;
-    }
-    df = devm_devfreq_add_device(&pdev->dev, &g2d_devfreq_profile, "userspace", NULL);
-    if (IS_ERR(df)) {
-        gcmkPRINT("%s, %d, add devfreq failed", __func__, __LINE__);
-        return gcvSTATUS_INVALID_OBJECT;
-    }
-    gpd.df[dieIndex] = df;
-#endif
+
     show_clk_status(dieIndex);
 
     params->devCount++;
@@ -634,10 +666,10 @@ static gceSTATUS gpu_parse_dt(struct platform_device *pdev, gcsMODULE_PARAMETERS
         unsigned char compatible[32] = { 0 };
         sprintf(compatible, "eswin,galcore_d%d", peerDieIndex);
         if (!g2d_device_node_scan(compatible)) {
-            return gcvSTATUS_MORE_DATA;
+            return 1;
         }
     }
-    return gcvSTATUS_OK;
+    return 0;
 }
 
 static const struct of_device_id gpu_dt_ids[] = {
@@ -844,19 +876,11 @@ static struct _gcsPLATFORM default_platform = {
 gceSTATUS
 _AdjustParam(gcsPLATFORM *Platform, gcsMODULE_PARAMETERS *Args)
 {
-    gceSTATUS status;
-#if defined(CONFIG_PM_DEVFREQ)
-    int i;
-#endif
+    int ret;
 #if gcdSUPPORT_DEVICE_TREE_SOURCE
-    status = gpu_parse_dt(Platform->device, Args);
-    if(gcmIS_SUCCESS(status)){
+    ret = gpu_parse_dt(Platform->device, Args);
+    if(gcmIS_SUCCESS(ret)){
         gpu_add_power_domains(Platform->device, Args);
-#if defined(CONFIG_PM_DEVFREQ)
-        for (i = 0; i < gcdDEVICE_COUNT; i++) {
-            gpd.dev[i] = Args->devices[i];
-        }
-#endif
     }
 #elif USE_LINUX_PCIE
     struct _gcsPLATFORM_PCIE *pcie_platform = (struct _gcsPLATFORM_PCIE *)Platform;
@@ -1038,7 +1062,7 @@ _AdjustParam(gcsPLATFORM *Platform, gcsMODULE_PARAMETERS *Args)
 
     Args->contiguousRequested = gcvTRUE;
 #endif
-    return status;
+    return (ret == 0) ? gcvSTATUS_OK : gcvSTATUS_MORE_DATA;
 }
 
 gceSTATUS
@@ -1282,9 +1306,7 @@ gceSTATUS _DmaExit(gcsPLATFORM *Platform)
         struct device *dev = Platform->params.devices[i];
         if (!dev) continue;
         g2d_reset(dev, i, 0);
-#if defined(CONFIG_PM_DEVFREQ)
-        devm_devfreq_remove_device(dev, gpd.df[i]);
-#endif
+
         show_clk_status(i);
     }
     return gcvSTATUS_OK;
