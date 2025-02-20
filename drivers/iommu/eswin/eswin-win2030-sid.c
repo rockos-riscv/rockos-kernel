@@ -694,12 +694,12 @@ static void eic770x_tbu_dump_attachment(struct tbu_priv *tbu_priv_p)
 
 	WARN_ON(!mutex_is_locked(&tbu_priv_p->tbu_priv_lock));
 
-	pr_info("------Dump:(node %d) tbu 0x%02x total refcnt %d, attached device(s):------\n",
+	pr_debug("------Dump:(node %d) tbu 0x%02x total refcnt %d, attached device(s):------\n",
 		tbu_priv_p->nid, tbu_priv_p->tbu_client_p->tbu_id, atomic_read(&tbu_priv_p->refcount));
 	list_for_each_entry(a, &tbu_priv_p->attachments, list) {
-		pr_info("(node %d) %-32s refcnt %d\n", tbu_priv_p->nid, dev_name(a->dev), atomic_read(&a->f_count));
+		pr_debug("(node %d) %-32s refcnt %d\n", tbu_priv_p->nid, dev_name(a->dev), atomic_read(&a->f_count));
 	}
-	pr_info("------End of dump:(node %d) tbu 0x%02x------------------------------------\n",
+	pr_debug("------End of dump:(node %d) tbu 0x%02x------------------------------------\n",
 		tbu_priv_p->nid, tbu_priv_p->tbu_client_p->tbu_id);
 
 }
@@ -719,7 +719,7 @@ static int win2030_tbu_power_ctl_register(struct tbu_priv *tbu_priv_p, bool is_p
 		__func__, nid, is_powerUp, tbu_priv_p);
 	if (is_powerUp == false) { //power down
 		if (unlikely(0 == old_refcount)) {
-			pr_info("%s, tbu_id 0x%02x is down already!\n", __func__, tbu_client_p->tbu_id);
+			pr_debug("%s, tbu_id 0x%02x is down already!\n", __func__, tbu_client_p->tbu_id);
 			goto tbu_finish;
 		}
 
@@ -728,7 +728,7 @@ static int win2030_tbu_power_ctl_register(struct tbu_priv *tbu_priv_p, bool is_p
 			ret = tbu_power_down_ref_release(&tbu_priv_p->refcount);
 		}
 		else {
-			pr_info("tbu 0x%02x(node %d) is used by other module(s) right now!\n",
+			pr_debug("tbu 0x%02x(node %d) is used by other module(s) right now!\n",
 				tbu_client_p->tbu_id, tbu_priv_p->nid);
 		}
 	}
@@ -737,7 +737,7 @@ static int win2030_tbu_power_ctl_register(struct tbu_priv *tbu_priv_p, bool is_p
 			ret = do_win2030_tbu_power_up(nid, tbu_reg_info_p);
 		}
 		else {
-			pr_info("tbu 0x%02x(node %d) is already power up!",
+			pr_debug("tbu 0x%02x(node %d) is already power up!",
 				tbu_client_p->tbu_id, tbu_priv_p->nid);
 		}
 		atomic_add(1, &tbu_priv_p->refcount);
@@ -885,7 +885,7 @@ int win2030_tbu_power(struct device *dev, bool is_powerUp)
 	#endif
 	}
 
-	dev_info(dev, "%s %s!\n", __func__, (is_powerUp == true)? "up":"down");
+	dev_dbg(dev, "%s %s!\n", __func__, (is_powerUp == true)? "up":"down");
 	of_property_for_each_u32(node, "tbus", tbu_id) {
 		pr_debug("tbus = <0x%02x>\n", tbu_id);
 		if (0 == win2030_get_tbu_priv(nid, tbu_id, &tbu_priv_p)) {
@@ -934,7 +934,7 @@ int win2030_tbu_power_by_dev_and_node(struct device *dev, struct device_node *no
 		pr_err("%s:%d, NUMA_NO_NODE\n", __func__, __LINE__);
 		return -EFAULT;
 	#else
-		pr_info("%s:%d, NUMA_NO_NODE, single DIE\n", __func__, __LINE__);
+		pr_debug("%s:%d, NUMA_NO_NODE, single DIE\n", __func__, __LINE__);
 		nid = 0;
 	#endif
 	}
