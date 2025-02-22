@@ -242,6 +242,7 @@
 
 &d0_npu{
 	status = "okay";
+	npu-supply=<&npu_vcc1>;
 };
 
 &d0_dsp_subsys {
@@ -847,6 +848,8 @@
 	status = "okay";
 };
 &dev_llc_d0{
+	/* apply_npu_1G_freq; */
+	npu-supply=<&npu_vcc1>;
 	apply_npu_high_freq;
 };
 
