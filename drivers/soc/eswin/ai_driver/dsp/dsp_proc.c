@@ -26,6 +26,7 @@
 #include <linux/seq_file.h>
 #include <linux/iommu.h>
 #include "dsp_main.h"
+#include "dsp_platform.h"
 
 static struct proc_dir_entry *proc_es_dsp;
 extern int dsp_log_level;

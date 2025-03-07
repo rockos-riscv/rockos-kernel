@@ -36,6 +36,7 @@
 #include <linux/eswin-win2030-sid-cfg.h>
 #include <dt-bindings/memory/eswin-win2030-sid.h>
 #include <linux/clk.h>
+#include <linux/clk-provider.h>
 #include <linux/slab.h>
 #include <linux/iommu.h>
 #include <linux/es_iommu_rsv.h>
