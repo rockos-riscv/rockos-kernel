@@ -443,6 +443,8 @@
 	enable-data-pullup;
 	no-sdio;
 	no-mmc;
+	disable-wp;
+	broken-cd;
 };
 
 &sdio1 {
