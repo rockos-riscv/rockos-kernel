@@ -407,7 +407,6 @@ static void es_dc_enable(struct device *dev, struct drm_crtc *crtc)
 #endif
 
 	dc_hw_setup_display(&dc->hw, &display);
-
 	cursor.enable = false;
 	dc_hw_update_cursor(&dc->hw, &cursor);
 }
