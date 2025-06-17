@@ -225,7 +225,7 @@
 			riscv,ndev = <520>;
 		};
 		ccache: cache-controller@2010000 {
-			compatible = "sifive,eic7700";
+			compatible = "eswin,eic7700-l3-cache";
 			cache-block-size = <64>;
 			cache-level = <3>;
 			cache-sets = <4096>;
