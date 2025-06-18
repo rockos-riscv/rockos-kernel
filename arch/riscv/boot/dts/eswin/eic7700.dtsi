@@ -268,6 +268,7 @@
 		reg = <0x0 0x50400000 0x0 0x10000>;
 		resets = <&d0_reset HSPDMA_RST_CTRL SW_HSP_ETH0_ARSTN>;
 		reset-names = "ethrst";
+		iommus = <&smmu0 EIC7700_SID_ETH0>;
 		snps,axi-config = <&d0_stmmac_axi_setup>;
 		tbus = <EIC7700_TBUID_ETH>;
 		status = "disabled";
@@ -295,6 +296,7 @@
 		reg = <0x0 0x50410000 0x0 0x10000>;
 		resets = <&d0_reset HSPDMA_RST_CTRL SW_HSP_ETH1_ARSTN>;
 		reset-names = "ethrst";
+		iommus = <&smmu0 EIC7700_SID_ETH1>;
 		tbus = <EIC7700_TBUID_ETH>;
 		snps,axi-config = <&d0_stmmac_axi_setup_gmac1>;
 		status = "disabled";

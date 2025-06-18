@@ -442,7 +442,7 @@ static int dwc_qos_probe(struct platform_device *pdev,
 	return 0;
 }
 
-static int dwc_qos_remove(struct platform_device *pdev)
+static void dwc_qos_remove(struct platform_device *pdev)
 {
 	int ret;
 	struct dwc_qos_priv *dwc_priv = get_stmmac_bsp_priv(&pdev->dev);
@@ -450,7 +450,7 @@ static int dwc_qos_remove(struct platform_device *pdev)
 	ret = eic7700_tbu_power(&pdev->dev, false);
 	if (ret) {
 		dev_err(&pdev->dev, "failed to power down tbu\n");
-		return ret;
+		return;
 	}
 
 	reset_control_assert(dwc_priv->rst);
@@ -458,15 +458,13 @@ static int dwc_qos_remove(struct platform_device *pdev)
 	clk_disable_unprepare(dwc_priv->clk_app);
 
 	devm_gpiod_put(&pdev->dev, dwc_priv->phy_reset);
-
-	return 0;
 }
 
 struct dwc_eth_dwmac_data {
 	int (*probe)(struct platform_device *pdev,
 		     struct plat_stmmacenet_data *data,
 		     struct stmmac_resources *res);
-	int (*remove)(struct platform_device *pdev);
+	void (*remove)(struct platform_device *pdev);
 };
 
 static const struct dwc_eth_dwmac_data dwc_qos_data = {
@@ -500,7 +498,7 @@ static int dwc_eth_dwmac_probe(struct platform_device *pdev)
 	if (IS_ERR(stmmac_res.addr))
 		return PTR_ERR(stmmac_res.addr);
 
-	plat_dat = stmmac_probe_config_dt(pdev, stmmac_res.mac);
+	plat_dat = devm_stmmac_probe_config_dt(pdev, stmmac_res.mac);
 	if (IS_ERR(plat_dat))
 		return PTR_ERR(plat_dat);
 
@@ -510,7 +508,7 @@ static int dwc_eth_dwmac_probe(struct platform_device *pdev)
 			dev_err(&pdev->dev, "failed to probe subdriver: %d\n",
 				ret);
 
-		goto remove_config;
+		goto remove;
 	}
 
 	ret = dwc_eth_dwmac_config_dt(pdev, plat_dat);
@@ -534,30 +532,16 @@ static int dwc_eth_dwmac_probe(struct platform_device *pdev)
 
 remove:
 	data->remove(pdev);
-remove_config:
-	stmmac_remove_config_dt(pdev, plat_dat);
-
 	return ret;
 }
 
-static int dwc_eth_dwmac_remove(struct platform_device *pdev)
+static void dwc_eth_dwmac_remove(struct platform_device *pdev)
 {
-	struct net_device *ndev = platform_get_drvdata(pdev);
-	struct stmmac_priv *priv = netdev_priv(ndev);
 	const struct dwc_eth_dwmac_data *data;
-	int err;
 
 	data = device_get_match_data(&pdev->dev);
 
 	stmmac_dvr_remove(&pdev->dev);
-
-	err = data->remove(pdev);
-	if (err < 0)
-		dev_err(&pdev->dev, "failed to remove subdriver: %d\n", err);
-
-	stmmac_remove_config_dt(pdev, priv->plat);
-
-	return err;
 }
 
 static const struct of_device_id dwc_eth_dwmac_match[] = {
