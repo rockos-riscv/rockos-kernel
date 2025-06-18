@@ -1503,7 +1503,7 @@ static int __maybe_unused axi_dma_runtime_resume(struct device *dev)
 }
 
 #ifdef CONFIG_SOC_SIFIVE_EIC7700
-int eic7700_dma_sel_cfg(struct axi_dma_chan *chan, u32 val)
+static int eic7700_dma_sel_cfg(struct axi_dma_chan *chan, u32 val)
 {
 	struct axi_dma_chip *chip = chan->chip;
 	struct device *dev = chan->chip->dev;
