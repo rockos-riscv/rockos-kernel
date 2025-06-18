@@ -173,7 +173,7 @@ static int eswin_pcie_power_off(struct eswin_pcie *eswin_pcie)
 	return 0;
 }
 
-int eswin_evb_socket_power_on(struct device *dev)
+static int eswin_evb_socket_power_on(struct device *dev)
 {
 	int err_desc=0;
 	struct gpio_desc *gpio;
@@ -266,7 +266,7 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
 }
 
 static const struct dw_pcie_host_ops eswin_pcie_host_ops = {
-	.host_init = eswin_pcie_host_init,
+	.init = eswin_pcie_host_init,
 };
 
 static const struct dw_pcie_ops dw_pcie_ops = {
@@ -274,7 +274,7 @@ static const struct dw_pcie_ops dw_pcie_ops = {
 	.link_up = eswin_pcie_link_up,
 };
 
-static int __exit eswin_pcie_remove(struct platform_device *pdev)
+static void __exit eswin_pcie_remove(struct platform_device *pdev)
 {
 	struct eswin_pcie *pcie = platform_get_drvdata(pdev);
 
@@ -283,8 +283,6 @@ static int __exit eswin_pcie_remove(struct platform_device *pdev)
 	eic7700_tbu_power(&pdev->dev, false);
 	eswin_pcie_power_off(pcie);
 	eswin_pcie_clk_disable(pcie);
-
-	return 0;
 }
 
 static int eswin_pcie_probe(struct platform_device *pdev)
