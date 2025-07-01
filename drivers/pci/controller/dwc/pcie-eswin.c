@@ -229,12 +229,20 @@ static int eswin_pcie_host_init(struct dw_pcie_rp *pp)
 	writel_relaxed(val, pcie->mgmt_base + PCIEMGMT_CTRL0_OFFSET);
 
 	/* wait pm_sel_aux_clk to 0 */
-	while (1) {
+	for (ret = 50; ret > 0; ret--) {
 		val = readl_relaxed(pcie->mgmt_base + PCIEMGMT_STATUS0_OFFSET);
 		if (!(val & PCIE_PM_SEL_AUX_CLK)) {
 			break;
 		}
-		msleep(1);
+		msleep(2);
+	}
+
+	if(!ret) {
+		dev_err(pcie->pci.dev, "No clock present\n");
+		eic7700_tbu_power(pcie->pci.dev, false);
+		eswin_pcie_power_off(pcie);
+		eswin_pcie_clk_disable(pcie);
+		return -ENODEV;
 	}
 
 	/* config eswin vendor id and eic7700 device id */
