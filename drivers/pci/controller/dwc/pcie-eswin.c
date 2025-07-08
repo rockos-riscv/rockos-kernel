@@ -74,10 +74,7 @@ struct eswin_pcie {
 
 static void eswin_pcie_shutdown(struct platform_device *pdev)
 {
-	struct eswin_pcie *pcie = platform_get_drvdata(pdev);
-
-	/* Bring down link, so bootloader gets clean state in case of reboot */
-	reset_control_assert(pcie->perst);
+	/* Do nothing to keep PCIe alive at shutdown */
 }
 
 static int eswin_pcie_start_link(struct dw_pcie *pci)
