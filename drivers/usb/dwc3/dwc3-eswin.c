@@ -17,7 +17,7 @@
  * You should have received a copy of the GNU General Public License
  * along with this program.  If not, see <https://www.gnu.org/licenses/>.
  *
- * Authors: Han Min <hanmin@eswincomputing.com>
+ * Authors: Yang Wei <yangwei1@eswincomputing.com
  */
 
 #include <linux/async.h>
@@ -364,16 +364,15 @@ static int dwc3_eswin_probe(struct platform_device *pdev)
 	int err_desc = 0;
 	struct gpio_desc *hub_gpio;
 
-	hub_gpio = devm_gpiod_get(dev, "hub-rst", GPIOD_OUT_HIGH);
-	err_desc = IS_ERR(hub_gpio);
-
-	if (!err_desc) {
-		gpiod_set_raw_value(hub_gpio, 1);
-	}
-
 	eswin = devm_kzalloc(dev, sizeof(*eswin), GFP_KERNEL);
 	if (!eswin)
 		return -ENOMEM;
+
+	hub_gpio = devm_gpiod_get(dev, "hub-rst", GPIOD_OUT_HIGH);
+	err_desc = IS_ERR(hub_gpio);
+	if (!err_desc) {
+		gpiod_set_raw_value(hub_gpio, 1);
+	}
 
 	count = of_clk_get_parent_count(np);
 	if (!count)
@@ -666,6 +665,6 @@ static struct platform_driver dwc3_eswin_driver = {
 module_platform_driver(dwc3_eswin_driver);
 
 MODULE_ALIAS("platform:eswin-dwc3");
-MODULE_AUTHOR("Han Min <hanmin@eswin.com>");
+MODULE_AUTHOR("Yang Wei <yangwei1@eswincomputing.com");
 MODULE_LICENSE("GPL v2");
 MODULE_DESCRIPTION("DesignWare USB3 ESWIN Glue Layer");
