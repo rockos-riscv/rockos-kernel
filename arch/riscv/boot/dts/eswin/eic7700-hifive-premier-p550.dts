@@ -237,14 +237,6 @@
 	status = "okay";
 	dr_mode = "host";
 	maximum-speed = "super-speed";
-	usb-hub {
-		gpio-hog;
-		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_gpio43_default>;
-		gpios = <&portb 11 GPIO_ACTIVE_HIGH>;
-		output-low;
-		line-name = "usb-hub-reset";
-	};
 };
 
 &d0_dmac0 {

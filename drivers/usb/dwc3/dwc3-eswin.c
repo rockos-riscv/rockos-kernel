@@ -362,17 +362,10 @@ static int dwc3_eswin_probe(struct platform_device *pdev)
 	int ret;
 	int i;
 	int err_desc = 0;
-	struct gpio_desc *hub_gpio;
 
 	eswin = devm_kzalloc(dev, sizeof(*eswin), GFP_KERNEL);
 	if (!eswin)
 		return -ENOMEM;
-
-	hub_gpio = devm_gpiod_get(dev, "hub-rst", GPIOD_OUT_HIGH);
-	err_desc = IS_ERR(hub_gpio);
-	if (!err_desc) {
-		gpiod_set_raw_value(hub_gpio, 1);
-	}
 
 	count = of_clk_get_parent_count(np);
 	if (!count)
