@@ -69,9 +69,10 @@
 #define SATA_MPLL_MULTIPLIER          (0x3c << 16)
 #define SATA_M_CSYSREQ                BIT(0)
 #define SATA_S_CSYSREQ                BIT(16)
-#define HSPDME_RST_CTRL               0x41C
-#define SW_HSP_SATA_ARSTN             BIT(27)
-#define SW_SATA_RSTN                  (0xf << 9)
+
+struct eswin_ahci_plat {
+	struct reset_control *apb_rst;
+};
 
 static const struct ata_port_info ahci_port_info = {
 	.flags		= AHCI_FLAG_COMMON,
@@ -143,6 +144,7 @@ static int eswin_sata_init(struct device *dev)
 		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
 		return -1;
 	}
+
 	regmap_write(regmap, SATA_REF_CTRL1, 0x1);
 	regmap_write(regmap, SATA_PHY_CTRL0, (SATA_P0_AMPLITUDE_GEN1|SATA_P0_AMPLITUDE_GEN2|SATA_P0_AMPLITUDE_GEN3));
 	regmap_write(regmap, SATA_PHY_CTRL1, (SATA_P0_PHY_TX_PREEMPH_GEN1|SATA_P0_PHY_TX_PREEMPH_GEN2|SATA_P0_PHY_TX_PREEMPH_GEN3));
@@ -150,114 +152,40 @@ static int eswin_sata_init(struct device *dev)
 	regmap_write(regmap, SATA_AXI_LP_CTRL, (SATA_M_CSYSREQ|SATA_S_CSYSREQ));
 	regmap_write(regmap, SATA_REG_CTRL, (SATA_REF_REPEATCLK_EN|SATA_REF_USE_PAD));
 	regmap_write(regmap, SATA_MPLL_CTRL, SATA_MPLL_MULTIPLIER);
-	regmap_write(regmap, SATA_RESET_CTRL, 0x0);
+	udelay(20);
 
 	return 0;
 }
 
-static int eswin_reset(struct device *dev)
+static int eswin_ahci_platform_resets(struct ahci_host_priv *hpriv,
+				struct device *dev)
 {
-	struct reset_control *asic0_rst;
-	struct reset_control *oob_rst;
-	struct reset_control *pmalive_rst;
-	struct reset_control *rbc_rst;
-	struct reset_control *apb_rst;
-	int rc;
+	struct eswin_ahci_plat *plat = hpriv->plat_data;
+	struct regmap *regmap;
+	int ret;
 
-	asic0_rst = devm_reset_control_get_shared(dev, "asic0");
-	if (IS_ERR_OR_NULL(asic0_rst)) {
-		dev_err(dev, "Failed to asic0_rst handle\n");
-		return -EFAULT;
-	}
-	oob_rst = devm_reset_control_get_shared(dev, "oob");
-	if (IS_ERR_OR_NULL(oob_rst)) {
-		dev_err(dev, "Failed to oob_rst handle\n");
-		return -EFAULT;
-	}
-	pmalive_rst = devm_reset_control_get_shared(dev, "pmalive");
-	if (IS_ERR_OR_NULL(pmalive_rst)) {
-		dev_err(dev, "Failed to pmalive_rst handle\n");
-		return -EFAULT;
-	}
-	rbc_rst = devm_reset_control_get_shared(dev, "rbc");
-	if (IS_ERR_OR_NULL(rbc_rst)) {
-		dev_err(dev, "Failed to rbc_rst handle\n");
-		return -EFAULT;
-	}
-	apb_rst = devm_reset_control_get_shared(dev, "apb");
-	if (IS_ERR_OR_NULL(apb_rst)) {
-		dev_err(dev, "Failed to apb_rst handle\n");
-		return -EFAULT;
+	regmap = syscon_regmap_lookup_by_phandle(dev->of_node, "eswin,hsp_sp_csr");
+	if (IS_ERR(regmap)) {
+		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
+		return -1;
 	}
 
-	if (asic0_rst) {
-		rc = reset_control_deassert(asic0_rst);
-		WARN_ON(0 != rc);
-	}
-	if (oob_rst) {
-		rc = reset_control_deassert(oob_rst);
-		WARN_ON(0 != rc);
-	}
-	if (pmalive_rst) {
-		rc = reset_control_deassert(pmalive_rst);
-		WARN_ON(0 != rc);
-	}
-	if (rbc_rst) {
-		rc = reset_control_deassert(rbc_rst);
-		WARN_ON(0 != rc);
-	}
-	if (apb_rst) {
-		rc = reset_control_deassert(apb_rst);
-		WARN_ON(0 != rc);
-	}
+	plat->apb_rst = devm_reset_control_get_optional(dev, "apb");
+	if (PTR_ERR(plat->apb_rst) == -EPROBE_DEFER)
+		return PTR_ERR(plat->apb_rst);
 
-	return 0;
-}
+	ret = reset_control_assert(plat->apb_rst);
+	if (ret) {
+		dev_err(dev, "failed to assert apb_rst\n");
+		return ret;
+	}
+	regmap_write(regmap, SATA_RESET_CTRL, SATA_RESET_CTRL_ASSERT);
 
-
-static int eswin_unreset(struct device *dev)
-{
-	struct reset_control *asic0_rst;
-	struct reset_control *oob_rst;
-	struct reset_control *pmalive_rst;
-	struct reset_control *rbc_rst;
-	int rc;
-
-	asic0_rst = devm_reset_control_get_shared(dev, "asic0");
-	if (IS_ERR_OR_NULL(asic0_rst)) {
-		dev_err(dev, "Failed to asic0_rst handle\n");
-		return -EFAULT;
-	}
-	oob_rst = devm_reset_control_get_shared(dev, "oob");
-	if (IS_ERR_OR_NULL(oob_rst)) {
-		dev_err(dev, "Failed to oob_rst handle\n");
-		return -EFAULT;
-	}
-	pmalive_rst = devm_reset_control_get_shared(dev, "pmalive");
-	if (IS_ERR_OR_NULL(pmalive_rst)) {
-		dev_err(dev, "Failed to pmalive_rst handle\n");
-		return -EFAULT;
-	}
-	rbc_rst = devm_reset_control_get_shared(dev, "rbc");
-	if (IS_ERR_OR_NULL(rbc_rst)) {
-		dev_err(dev, "Failed to rbc_rst handle\n");
-		return -EFAULT;
-	}
-	if (asic0_rst) {
-		rc = reset_control_assert(asic0_rst);
-		WARN_ON(0 != rc);
-	}
-	if (oob_rst) {
-		rc = reset_control_assert(oob_rst);
-		WARN_ON(0 != rc);
-	}
-	if (pmalive_rst) {
-		rc = reset_control_assert(pmalive_rst);
-		WARN_ON(0 != rc);
-	}
-	if (rbc_rst) {
-		rc = reset_control_assert(rbc_rst);
-		WARN_ON(0 != rc);
+	regmap_write(regmap, SATA_RESET_CTRL, SATA_RESET_CTRL_DEASSERT);
+	ret = reset_control_deassert(plat->apb_rst);
+	if (ret) {
+		dev_err(dev, "failed to deassert apb_rst\n");
+		return ret;
 	}
 
 	return 0;
@@ -267,45 +195,57 @@ static int ahci_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	struct ahci_host_priv *hpriv;
+	struct eswin_ahci_plat *plat;
 	const struct ata_port_info *port;
-	int rc;
+	int ret;
+
+	plat = devm_kzalloc(dev, sizeof(*plat), GFP_KERNEL);
+	if(!plat)
+		return -ENOMEM;
 
 	hpriv = ahci_platform_get_resources(pdev,
 			0);
 	if (IS_ERR(hpriv))
 		return PTR_ERR(hpriv);
 
-	rc = eswin_reset(dev);
-	if (rc)
-		return rc;
 	eswin_sata_init(dev);
-	eswin_sata_sid_cfg(dev);
-	eic7700_tbu_power(&pdev->dev, true);
-	rc = dma_set_mask_and_coherent(dev,DMA_BIT_MASK(64));
 
-	if (of_device_is_compatible(dev->of_node, "hisilicon,hisi-ahci"))
-		hpriv->flags |= AHCI_HFLAG_NO_FBS | AHCI_HFLAG_NO_NCQ;
+	hpriv->plat_data = plat;
+	ret = eswin_ahci_platform_resets(hpriv, dev);
+	if(ret)
+		return ret;
+
+	ret = ahci_platform_enable_resources(hpriv);
+	if(ret)
+		return ret;
+
+	eswin_sata_sid_cfg(dev);
+
+	eic7700_tbu_power(&pdev->dev, true);
+
+	ret = dma_set_mask_and_coherent(dev,DMA_BIT_MASK(64));
+	if(ret)
+		return ret;
 
 	port = acpi_device_get_match_data(dev);
 	if (!port){
 		port = &ahci_port_info;
 	}
-	rc = ahci_platform_init_host(pdev, hpriv, port,
+	ret = ahci_platform_init_host(pdev, hpriv, port,
 			&ahci_platform_sht);
-	if (rc)
+	if (ret)
 		goto disable_resources;
 
 	return 0;
 
 disable_resources:
 	ahci_platform_disable_resources(hpriv);
-	return rc;
+	return ret;
 }
 
 static void ahci_remove(struct platform_device *pdev)
 {
 	eic7700_tbu_power(&pdev->dev, false);
-	eswin_unreset(&pdev->dev);
 
 	ata_platform_remove_one(pdev);
 }
