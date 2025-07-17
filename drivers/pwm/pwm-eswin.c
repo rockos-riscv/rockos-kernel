@@ -209,16 +209,15 @@ MODULE_DEVICE_TABLE(of, eswin_pwm_dt_ids);
 static int eswin_pwm_probe(struct platform_device *pdev)
 {
 	struct eswin_pwm *pc;
-	struct pwm_chip *chip;
 	int ret, count;
 	struct resource *res;
 	int clk_rate;
 
-	chip = devm_pwmchip_alloc(&pdev->dev, NUM_PWM_CHANNEL, sizeof(*pc));
+	struct pwm_chip *chip = devm_pwmchip_alloc(&pdev->dev, NUM_PWM_CHANNEL, sizeof(*pc));
 	if(IS_ERR(chip))
 		return PTR_ERR(chip);
 
-	pc = pwmchip_get_drvdata(chip);
+	pc = to_eswin_pwm(chip);
 
 	res = platform_get_resource(pdev, IORESOURCE_MEM, 0);
 	if (!res)
@@ -282,7 +281,7 @@ static int eswin_pwm_probe(struct platform_device *pdev)
 
 	chip->ops = &eswin_pwm_ops;
 
-	ret = pwmchip_add(chip);
+	ret = devm_pwmchip_add(&pdev->dev, chip);
 	if (ret < 0) {
 		dev_err(&pdev->dev, "pwmchip_add() failed: %d\n", ret);
 		goto err_pclk;
@@ -303,8 +302,6 @@ static void eswin_pwm_remove(struct platform_device *pdev)
 	struct pwm_chip *chip = platform_get_drvdata(pdev);
 	struct eswin_pwm *pc = to_eswin_pwm(chip);
 
-	pwmchip_remove(chip);
-
 	clk_disable_unprepare(pc->pclk);
 	clk_disable_unprepare(pc->clk);
 }
@@ -322,4 +319,3 @@ module_platform_driver(eswin_pwm_driver);
 MODULE_DESCRIPTION("eswin SoC PWM driver");
 MODULE_AUTHOR("zhangchunyun@eswincomputing.com");
 MODULE_LICENSE("GPL");
-
