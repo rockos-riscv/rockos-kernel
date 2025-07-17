@@ -355,7 +355,7 @@ static int i2s_configure_res_by_dt(struct i2s_dev *dev,
 static int i2s_startup(struct snd_pcm_substream *substream,
 		struct snd_soc_dai *cpu_dai)
 {
-	struct snd_soc_pcm_runtime *rtd = asoc_substream_to_rtd(substream);
+	struct snd_soc_pcm_runtime *rtd = snd_soc_substream_to_rtd(substream);
 	struct snd_soc_dai_link *dai_link = rtd->dai_link;
 
 	dai_link->trigger_stop = SND_SOC_TRIGGER_ORDER_LDC;
@@ -862,7 +862,7 @@ err_probe:
 	return ret;
 }
 
-static int i2s_remove(struct platform_device *pdev)
+static void i2s_remove(struct platform_device *pdev)
 {
 	struct i2s_dev *i2s_drvdata = dev_get_drvdata(&pdev->dev);
 
@@ -871,8 +871,6 @@ static int i2s_remove(struct platform_device *pdev)
 	pm_runtime_disable(&pdev->dev);
 
 	audio_proc_module_exit();
-
-	return 0;
 }
 
 #ifdef CONFIG_OF

@@ -13,6 +13,19 @@ struct device;
 extern const struct regmap_config es8328_regmap_config;
 int es8328_probe(struct device *dev, struct regmap *regmap);
 
+int esw_codec_dump_get(struct snd_kcontrol *kcontrol,
+                                           struct snd_ctl_elem_value *ucontrol);
+int esw_codec_dump_info(struct snd_kcontrol *kcontrol,
+                                            struct snd_ctl_elem_info *uinfo);
+int esw_codec_dump_put(struct snd_kcontrol *kcontrol,
+                                           struct snd_ctl_elem_value *ucontrol);
+int esw_codec_reg_get(struct snd_kcontrol *kcontrol,
+                                           struct snd_ctl_elem_value *ucontrol);
+int esw_codec_reg_info(struct snd_kcontrol *kcontrol,
+                                            struct snd_ctl_elem_info *uinfo);
+int esw_codec_reg_put(struct snd_kcontrol *kcontrol,
+                                           struct snd_ctl_elem_value *ucontrol);
+
 #define ES8328_DACLVOL 46
 #define ES8328_DACRVOL 47
 #define ES8328_DACCTL 28
