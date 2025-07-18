@@ -222,7 +222,7 @@ static int eswin_fan_control_write_pwm(struct device *dev, u32 attr, long val)
 		case hwmon_pwm_input:
 	if((val < 25) || (val > 255))
 	{
-		dev_err(dev,"pwm range is form 25 to 255\n");
+		dev_err(dev,"pwm range is from 25 to 255\n");
 		return -EINVAL;
 	}
 	else
