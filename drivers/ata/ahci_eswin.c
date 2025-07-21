@@ -65,7 +65,7 @@
 #define SATA_P0_AMPLITUDE_GEN3        (0x73 << 16)
 #define SATA_P0_PHY_TX_PREEMPH_GEN1   0x05
 #define SATA_P0_PHY_TX_PREEMPH_GEN2   (0x05 << 8)
-#define SATA_P0_PHY_TX_PREEMPH_GEN3   (0x23 << 16)
+#define SATA_P0_PHY_TX_PREEMPH_GEN3   (0x08 << 16)
 #define SATA_MPLL_MULTIPLIER          (0x3c << 16)
 #define SATA_M_CSYSREQ                BIT(0)
 #define SATA_S_CSYSREQ                BIT(16)
