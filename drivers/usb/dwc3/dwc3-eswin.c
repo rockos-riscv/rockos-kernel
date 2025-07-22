@@ -361,7 +361,6 @@ static int dwc3_eswin_probe(struct platform_device *pdev)
 	unsigned int count;
 	int ret;
 	int i;
-	int err_desc = 0;
 
 	eswin = devm_kzalloc(dev, sizeof(*eswin), GFP_KERNEL);
 	if (!eswin)
