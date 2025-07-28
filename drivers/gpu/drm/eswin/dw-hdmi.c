@@ -35,6 +35,7 @@
 #include <drm/drm_of.h>
 #include <drm/drm_print.h>
 #include <drm/drm_probe_helper.h>
+#include <drm/drm_edid.h>
 
 #include "dw_hdmi_audio.h"
 #include "dw_hdmi_cec.h"
@@ -246,7 +247,7 @@ struct dw_hdmi {
 	(HDMI_PHY_RX_SENSE0 | HDMI_PHY_RX_SENSE1 | \
 	 HDMI_PHY_RX_SENSE2 | HDMI_PHY_RX_SENSE3)
 
-static struct edid *dw_hdmi_get_edid(struct dw_hdmi *hdmi,
+static const struct drm_edid *dw_hdmi_edid_read(struct dw_hdmi *hdmi,
 				     struct drm_connector *connector);
 static void hdmi_tx_hdcp_config(struct dw_hdmi *hdmi,
 						const struct drm_display_mode *mode);
@@ -707,7 +708,6 @@ static struct i2c_adapter *dw_hdmi_i2c_adapter(struct dw_hdmi *hdmi)
 	init_completion(&i2c->cmp);
 
 	adap = &i2c->adap;
-	adap->class = I2C_CLASS_DDC;
 	adap->owner = THIS_MODULE;
 	adap->dev.parent = hdmi->dev;
 	adap->algo = &dw_hdmi_algorithm;
@@ -2714,8 +2714,8 @@ static void dw_hdmi_update_power(struct dw_hdmi *hdmi)
 			dw_hdmi_poweroff(hdmi);
 	} else {
 		if (!hdmi->bridge_is_on) {
-			struct edid *edid;
-			edid = dw_hdmi_get_edid(hdmi, &hdmi->connector);
+			const struct drm_edid *drm_edid;
+			drm_edid = dw_hdmi_edid_read(hdmi, &hdmi->connector);
 			dw_hdmi_poweron(hdmi);
 		}
 	}
@@ -2751,19 +2751,27 @@ static enum drm_connector_status dw_hdmi_detect(struct dw_hdmi *hdmi)
 	return result;
 }
 
-static struct edid *dw_hdmi_get_edid(struct dw_hdmi *hdmi,
+static const struct drm_edid *dw_hdmi_edid_read(struct dw_hdmi *hdmi,
 				     struct drm_connector *connector)
 {
-	struct edid *edid;
+	const struct drm_edid *drm_edid;
+	const struct edid *edid;
 
 	if (!hdmi->ddc)
 		return NULL;
 
-	edid = drm_get_edid(connector, hdmi->ddc);
-	if (!edid) {
+	drm_edid = drm_edid_read_ddc(connector, hdmi->ddc);
+	if (!drm_edid) {
 		dev_err(hdmi->dev, "failed to get edid\n");
 		return NULL;
 	}
+
+	/*
+	 * FIXME: This should use connector->display_info.is_hdmi and
+	 * connector->display_info.has_audio from a path that has read the EDID
+	 * and called drm_edid_connector_update().
+	 */
+	edid = drm_edid_raw(drm_edid);
 
 	dev_info(hdmi->dev, "got edid: width[%d] x height[%d]\n",
 		 edid->width_cm, edid->height_cm);
@@ -2771,7 +2779,7 @@ static struct edid *dw_hdmi_get_edid(struct dw_hdmi *hdmi,
 	hdmi->sink_is_hdmi = drm_detect_hdmi_monitor(edid);
 	hdmi->sink_has_audio = drm_detect_monitor_audio(edid);
 
-	return edid;
+	return drm_edid;
 }
 
 /* -----------------------------------------------------------------------------
@@ -2790,17 +2798,18 @@ static int dw_hdmi_connector_get_modes(struct drm_connector *connector)
 {
 	struct dw_hdmi *hdmi = container_of(connector, struct dw_hdmi,
 					     connector);
-	struct edid *edid;
+	const struct drm_edid *drm_edid;
 	int ret;
 
-	edid = dw_hdmi_get_edid(hdmi, connector);
-	if (!edid)
+	drm_edid = dw_hdmi_edid_read(hdmi, connector);
+	if (!drm_edid)
 		return 0;
 
-	drm_connector_update_edid_property(connector, edid);
-	cec_notifier_set_phys_addr_from_edid(hdmi->cec_notifier, edid);
-	ret = drm_add_edid_modes(connector, edid);
-	kfree(edid);
+	drm_edid_connector_update(connector, drm_edid);
+	cec_notifier_set_phys_addr(hdmi->cec_notifier,
+				   connector->display_info.source_physical_address);
+	ret = drm_edid_connector_add_modes(connector);
+	drm_edid_free(drm_edid);
 
 	return ret;
 }
@@ -3410,12 +3419,12 @@ static enum drm_connector_status dw_hdmi_bridge_detect(struct drm_bridge *bridge
 	return dw_hdmi_detect(hdmi);
 }
 
-static struct edid *dw_hdmi_bridge_get_edid(struct drm_bridge *bridge,
+static const struct drm_edid *dw_hdmi_bridge_edid_read(struct drm_bridge *bridge,
 					    struct drm_connector *connector)
 {
 	struct dw_hdmi *hdmi = bridge->driver_private;
 
-	return dw_hdmi_get_edid(hdmi, connector);
+	return dw_hdmi_edid_read(hdmi, connector);
 }
 
 static const struct drm_bridge_funcs dw_hdmi_bridge_funcs = {
@@ -3432,7 +3441,7 @@ static const struct drm_bridge_funcs dw_hdmi_bridge_funcs = {
 	.mode_set = dw_hdmi_bridge_mode_set,
 	.mode_valid = dw_hdmi_bridge_mode_valid,
 	.detect = dw_hdmi_bridge_detect,
-	.get_edid = dw_hdmi_bridge_get_edid,
+	.edid_read = dw_hdmi_bridge_edid_read,
 };
 
 /* -----------------------------------------------------------------------------

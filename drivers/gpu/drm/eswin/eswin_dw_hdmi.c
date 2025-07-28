@@ -915,10 +915,9 @@ static void dw_hdmi_eswin_shutdown(struct platform_device *pdev)
 	dw_hdmi_suspend(hdmi->hdmi);
 }
 
-static int dw_hdmi_eswin_remove(struct platform_device *pdev)
+static void dw_hdmi_eswin_remove(struct platform_device *pdev)
 {
 	component_del(&pdev->dev, &dw_hdmi_eswin_ops);
-	return 0;
 }
 
 static int __maybe_unused dw_hdmi_eswin_suspend(struct device *dev)

@@ -6,6 +6,8 @@
 #ifndef __ES_VIRTUAL_H_
 #define __ES_VIRTUAL_H_
 
+#include<linux/debugfs.h>
+
 struct es_virtual_display {
 	struct drm_encoder encoder;
 	struct drm_connector connector;

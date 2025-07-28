@@ -22,7 +22,8 @@
 #include <drm/drm_vblank.h>
 #include <drm/drm_framebuffer.h>
 #include <drm/drm_atomic_helper.h>
-#include <drm/drm_fbdev_generic.h>
+#include <drm/drm_fbdev_shmem.h>
+
 
 #include "es_drv.h"
 #include "es_fb.h"
@@ -56,6 +57,7 @@ static const struct file_operations fops = {
 	.poll = drm_poll,
 	.read = drm_read,
 	.mmap = es_gem_mmap,
+	.fop_flags = FOP_UNSIGNED_OFFSET,
 };
 
 #ifdef CONFIG_DEBUG_FS
@@ -103,7 +105,6 @@ static void es_debugfs_init(struct drm_minor *minor)
 static struct drm_driver es_drm_driver = {
 	.driver_features =
 		DRIVER_MODESET | DRIVER_ATOMIC | DRIVER_GEM | DRIVER_SYNCOBJ,
-	.lastclose = drm_fb_helper_lastclose,
 	.gem_prime_import = es_gem_prime_import,
 	.gem_prime_import_sg_table = es_gem_prime_import_sg_table,
 	.dumb_create = es_gem_dumb_create,
@@ -278,7 +279,7 @@ static int es_drm_bind(struct device *dev)
 	if (ret)
 		goto err_helper;
 
-	drm_fbdev_generic_setup(drm_dev, 32);
+	drm_fbdev_shmem_setup(drm_dev, 32);
 
 	return 0;
 
@@ -452,10 +453,9 @@ static int es_drm_platform_probe(struct platform_device *pdev)
 	return component_master_add_with_match(dev, &es_drm_ops, match);
 }
 
-static int es_drm_platform_remove(struct platform_device *pdev)
+static void es_drm_platform_remove(struct platform_device *pdev)
 {
 	component_master_del(&pdev->dev, &es_drm_ops);
-	return 0;
 }
 
 #ifdef CONFIG_PM_SLEEP

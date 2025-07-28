@@ -8,6 +8,8 @@
 #include <linux/regmap.h>
 #include <linux/mfd/syscon.h>
 #include <linux/media-bus-format.h>
+#include <linux/of.h>
+#include <linux/platform_device.h>
 
 #include <drm/drm_bridge.h>
 #include <drm/drm_crtc_helper.h>
@@ -242,15 +244,13 @@ static int encoder_probe(struct platform_device *pdev)
 	return component_add(dev, &encoder_component_ops);
 }
 
-static int encoder_remove(struct platform_device *pdev)
+static void encoder_remove(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 
 	component_del(dev, &encoder_component_ops);
 
 	dev_set_drvdata(dev, NULL);
-
-	return 0;
 }
 
 struct platform_driver simple_encoder_driver = {

@@ -7,6 +7,8 @@
 #include <linux/of_platform.h>
 #include <linux/media-bus-format.h>
 #include <linux/debugfs.h>
+#include <linux/vmalloc.h>
+#include <linux/of.h>
 
 #include <drm/drm_probe_helper.h>
 #include <drm/drm_of.h>
@@ -1286,15 +1288,13 @@ static int vd_probe(struct platform_device *pdev)
 	return component_add(dev, &vd_component_ops);
 }
 
-static int vd_remove(struct platform_device *pdev)
+static void vd_remove(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 
 	component_del(dev, &vd_component_ops);
 
 	dev_set_drvdata(dev, NULL);
-
-	return 0;
 }
 
 struct platform_driver virtual_display_platform_driver = {

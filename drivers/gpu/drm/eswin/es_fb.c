@@ -118,7 +118,6 @@ struct es_gem_object *es_fb_get_gem_obj(struct drm_framebuffer *fb,
 
 static const struct drm_mode_config_funcs es_mode_config_funcs = {
 	.fb_create = es_fb_create,
-	.output_poll_changed = drm_fb_helper_output_poll_changed,
 	.atomic_check = drm_atomic_helper_check,
 	.atomic_commit = drm_atomic_helper_commit,
 };
