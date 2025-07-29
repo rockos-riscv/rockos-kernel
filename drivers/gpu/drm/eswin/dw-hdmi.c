@@ -2714,8 +2714,7 @@ static void dw_hdmi_update_power(struct dw_hdmi *hdmi)
 			dw_hdmi_poweroff(hdmi);
 	} else {
 		if (!hdmi->bridge_is_on) {
-			const struct drm_edid *drm_edid;
-			drm_edid = dw_hdmi_edid_read(hdmi, &hdmi->connector);
+			dw_hdmi_edid_read(hdmi, &hdmi->connector);
 			dw_hdmi_poweron(hdmi);
 		}
 	}

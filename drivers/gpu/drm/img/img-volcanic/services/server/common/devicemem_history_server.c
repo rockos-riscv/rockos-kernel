@@ -810,13 +810,13 @@ static PVRSRV_ERROR CreateAllocation(PVRSRV_DEVICE_NODE *psDeviceNode,
 
 	psAlloc = ALLOC_INDEX_TO_PTR(psDevHData, ui32Alloc);
 
-	InitialiseAllocation(ALLOC_INDEX_TO_PTR(psDevHData, ui32Alloc),
-						pszName,
-						ui64Serial,
-						uiPID,
-						sDevVAddr,
-						uiSize,
-						ui32Log2PageSize);
+	InitialiseAllocation(psAlloc,
+				pszName,
+				ui64Serial,
+				uiPID,
+				sDevVAddr,
+				uiSize,
+				ui32Log2PageSize);
 
 	/* put the newly initialised allocation at the front of the MRU list */
 	TouchBusyAllocation(psDevHData, ui32Alloc);

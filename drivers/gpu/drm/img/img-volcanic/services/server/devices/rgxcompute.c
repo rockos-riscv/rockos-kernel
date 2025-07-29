@@ -434,6 +434,12 @@ PVRSRV_ERROR PVRSRVRGXKickCDMKM(RGX_SERVER_COMPUTE_CONTEXT	*psComputeContext,
 	RGX_CCB_CMD_HELPER_DATA	asCmdHelperData[1];
 	PVRSRV_ERROR			eError;
 	IMG_UINT32				ui32CDMCmdOffset = 0;
+
+	/* Added to suppress the unused-but-set-variable error in C,
+	 * especially in cases where the variable is used via macros
+	 * and treated as variable arguments.
+	 */
+	(void)ui32CDMCmdOffset;
 	PVRSRV_RGXDEV_INFO      *psDevInfo = FWCommonContextGetRGXDevInfo(psComputeContext->psServerCommonContext);
 	RGX_CLIENT_CCB          *psClientCCB = FWCommonContextGetClientCCB(psComputeContext->psServerCommonContext);
 	IMG_UINT32              ui32IntJobRef = OSAtomicIncrement(&psDevInfo->iCCBSubmissionOrdinal);

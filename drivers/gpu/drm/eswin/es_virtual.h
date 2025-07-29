@@ -32,5 +32,9 @@ to_virtual_display_with_encoder(struct drm_encoder *encoder)
 	return container_of(encoder, struct es_virtual_display, encoder);
 }
 
+int vd_encoder_atomic_check(struct drm_encoder *encoder,
+                            struct drm_crtc_state *crtc_state,
+                            struct drm_connector_state *conn_state);
+
 extern struct platform_driver virtual_display_platform_driver;
 #endif /* __ES_VIRTUAL_H_ */

@@ -96,5 +96,17 @@ int dc_mmu_construct(struct device *dev, dc_mmu_pt *mmu);
 int dc_mmu_map_memory(dc_mmu_pt mmu, u64 physical, u32 page_count, u32 *address,
 		      bool continuous);
 int dc_mmu_unmap_memory(dc_mmu_pt mmu, u32 gpu_address, u32 page_count);
+int _allocate_memory(u32 bytes, void **memory);
+int _allocate_stlb(dc_mmu_stlb_pt *stlb);
+int _allocate_all_stlb(struct device *dev, dc_mmu_stlb_pt *stlb);
+int _setup_process_address_space(struct device *dev, dc_mmu_pt mmu);
+int dc_mmu_get_page_entry(dc_mmu_pt mmu, u32 address, u32 **page_table);
+int _link(dc_mmu_pt mmu, u32 index, u32 node);
+int _add_free(dc_mmu_pt mmu, u32 index, u32 node, u32 count);
+int _collect(dc_mmu_pt mmu);
+int _fill_page_table(u32 *page_table, u32 page_count, u32 entry_value);
+int dc_mmu_allocate_pages(dc_mmu_pt mmu, u32 page_count, u32 *address);
+int dc_mmu_free_pages(dc_mmu_pt mmu, u32 address, u32 page_count);
+int dc_mmu_set_page(dc_mmu_pt mmu, u64 page_address, u32 *page_entry);
 
 #endif /* _ES_DC_MMU_H_ */

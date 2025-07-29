@@ -103,7 +103,6 @@ bridge_base := $(BRIDGE_SOURCE_ROOT)
 # -I$(OUT)/include -I$(TOP)/kernel/drivers/staging/imgtec
 ccflags-y += -D__linux__ -include $(srctree)/$(src)/config_kernel.h \
  -include $(srctree)/drivers/gpu/drm/img/kernel_config_compatibility.h \
- -I$(OUT)/include \
  -I$(srctree)/drivers/gpu/drm/img \
  -I$(srctree)/$(src)/hwdefs/volcanic \
  -I$(srctree)/$(src)/hwdefs/volcanic/km \

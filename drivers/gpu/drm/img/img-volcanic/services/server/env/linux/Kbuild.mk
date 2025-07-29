@@ -56,18 +56,10 @@ ccflags-y += \
  -Iinclude \
  -Iinclude/drm
 
-# Compatibility BVNC
-ccflags-y += -I$(TOP)/services/shared/devices/$(PVR_ARCH_DEFS)
-
-# Errata files
-ccflags-y += -I$(HWDEFS_DIR) -I$(HWDEFS_DIR)/$(RGX_BNC)
-
 # Linux-specific headers
 ccflags-y += \
  -I$(TOP)/include/drm \
- -I$(TOP)/services/include/env/linux \
- -I$(TOP)/services/server/env/linux/$(PVR_ARCH) -I$(TOP)/services/server/env/linux \
- -I$(TOP)/kernel/drivers/staging/imgtec
+ -I$(TOP)/services/server/env/linux \
 
 # System dir
 ifneq ($(wildcard $(TOP)/services/system/$(PVR_ARCH)/$(PVR_SYSTEM)/Kbuild.mk),)
@@ -410,8 +402,6 @@ $(PVRSRV_MODNAME)-y += services/server/common/di_impl_brg.o
 endif
 $(PVRSRV_MODNAME)-$(CONFIG_EVENT_TRACING) += services/server/env/linux/trace_events.o
 
-ccflags-y += -I$(OUT)/target_neutral/intermediates/firmware
-
 ifeq ($(SUPPORT_RGX),1)
 # Srvinit headers and source files
 
@@ -431,24 +421,22 @@ $(PVRSRV_MODNAME)-y += \
 $(PVRSRV_MODNAME)-$(CONFIG_PCI) += \
  services/system/common/env/linux/pci_support.o
 
-ccflags-y += \
- -I$(HWDEFS_DIR)/km
 ifeq ($(PVR_ARCH),rogue)
 ccflags-y += \
  -I$(TOP)/include/$(PVR_ARCH_DEFS)
 endif
 ccflags-y += \
  -I$(TOP)/include/$(PVR_ARCH) -I$(TOP)/include \
- -I$(TOP)/include/$(PVR_ARCH)/public -I$(TOP)/include/public \
+ -I$(TOP)/include/public \
  -I$(TOP)/services/include/$(PVR_ARCH) -I$(TOP)/services/include \
  -I$(TOP)/services/shared/include \
  -I$(TOP)/services/server/devices/$(PVR_ARCH) -I$(TOP)/services/server/devices \
- -I$(TOP)/services/server/include/$(PVR_ARCH) -I$(TOP)/services/server/include \
+ -I$(TOP)/services/server/include \
  -I$(TOP)/services/shared/common \
  -I$(TOP)/services/shared/devices \
  -I$(TOP)/services/system/include \
  -I$(TOP)/services/system/$(PVR_ARCH)/include \
- -I$(TOP)/services/server/common/$(PVR_ARCH) -I$(TOP)/services/server/common
+ -I$(TOP)/services/server/common
 
 ifeq ($(KERNEL_DRIVER_DIR),)
  ccflags-y += -I$(SYSTEM_DIR)

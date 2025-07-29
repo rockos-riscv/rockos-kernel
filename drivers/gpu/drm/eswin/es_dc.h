@@ -45,5 +45,9 @@ struct es_dc {
 	const struct es_dc_funcs *funcs;
 };
 
+void update_roi(struct es_dc *dc, enum dc_hw_plane_id id,
+                struct es_plane_state *plane_state, struct dc_hw_roi *roi,
+                struct dc_hw_fb *fb);
+
 extern struct platform_driver dc_platform_driver;
 #endif /* __ES_DC_H__ */

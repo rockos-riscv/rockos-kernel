@@ -180,6 +180,96 @@ typedef struct PVRSRV_DATA_TAG
 	PVRSRV_DRIVER_MODE    aeModuleParamDriverMode[PVRSRV_MAX_DEVICES]; /*!< Driver Mode for each device requested at launch */
 } PVRSRV_DATA;
 
+#if defined(SUPPORT_RGX)
+/* bit mask representing the enabled RGX bridges */
+static const IMG_UINT32 gui32RGXBridges =
+          (1U << (PVRSRV_BRIDGE_RGXTQ - PVRSRV_BRIDGE_RGX_FIRST))
+#if defined(RGX_FEATURE_COMPUTE) || defined(__KERNEL__)
+        | (1U << (PVRSRV_BRIDGE_RGXCMP - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_RGXTA3D - PVRSRV_BRIDGE_RGX_FIRST))
+#if defined(SUPPORT_BREAKPOINT)
+        | (1U << (PVRSRV_BRIDGE_BREAKPOINT - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_RGXFWDBG - PVRSRV_BRIDGE_RGX_FIRST))
+#if defined(PDUMP)
+        | (1U << (PVRSRV_BRIDGE_RGXPDUMP - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+#if defined(SUPPORT_RGXKICKSYNC_BRIDGE)
+        | (1U << (PVRSRV_BRIDGE_RGXKICKSYNC - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_RGXHWPERF - PVRSRV_BRIDGE_RGX_FIRST))
+#if defined(SUPPORT_REGCONFIG)
+        | (1U << (PVRSRV_BRIDGE_RGXREGCONFIG - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_RGXKICKSYNC - PVRSRV_BRIDGE_RGX_FIRST))
+#if defined(SUPPORT_FASTRENDER_DM) || defined(__KERNEL__)
+        | (1U << (PVRSRV_BRIDGE_RGXTQ2 - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+#if defined(SUPPORT_TIMERQUERY)
+        | (1U << (PVRSRV_BRIDGE_RGXTIMERQUERY - PVRSRV_BRIDGE_RGX_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_RGXRAY - PVRSRV_BRIDGE_RGX_FIRST))
+        ;
+#endif
+
+/* bit mask representing the enabled PVR bridges */
+
+static const IMG_UINT32 gui32PVRBridges =
+          (1U << (PVRSRV_BRIDGE_DEFAULT - PVRSRV_BRIDGE_FIRST))
+        | (1U << (PVRSRV_BRIDGE_SRVCORE - PVRSRV_BRIDGE_FIRST))
+        | (1U << (PVRSRV_BRIDGE_SYNC - PVRSRV_BRIDGE_FIRST))
+
+#if defined(PDUMP)
+        | (1U << (PVRSRV_BRIDGE_PDUMPCTRL - PVRSRV_BRIDGE_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_MM - PVRSRV_BRIDGE_FIRST))
+#if defined(SUPPORT_MMPLAT_BRIDGE)
+        | (1U << (PVRSRV_BRIDGE_MMPLAT - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(SUPPORT_CMM)
+        | (1U << (PVRSRV_BRIDGE_CMM - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(PDUMP)
+        | (1U << (PVRSRV_BRIDGE_PDUMPMM - PVRSRV_BRIDGE_FIRST))
+        | (1U << (PVRSRV_BRIDGE_PDUMP - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(__linux__)
+        | (1U << (PVRSRV_BRIDGE_DMABUF - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(SUPPORT_DISPLAY_CLASS)
+        | (1U << (PVRSRV_BRIDGE_DC - PVRSRV_BRIDGE_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_CACHE - PVRSRV_BRIDGE_FIRST))
+#if defined(SUPPORT_SECURE_EXPORT)
+        | (1U << (PVRSRV_BRIDGE_SMM - PVRSRV_BRIDGE_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_PVRTL - PVRSRV_BRIDGE_FIRST))
+#if defined(PVRSRV_ENABLE_GPU_MEMORY_INFO)
+        | (1U << (PVRSRV_BRIDGE_RI - PVRSRV_BRIDGE_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_DEVICEMEMHISTORY - PVRSRV_BRIDGE_FIRST))
+#if defined(PVRSRV_ENABLE_HTB)
+        | (1U << (PVRSRV_BRIDGE_HTBUFFER - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(SUPPORT_DISPLAY_CLASS) && defined(SUPPORT_DCPLAT_BRIDGE)
+        | (1U << (PVRSRV_BRIDGE_DCPLAT - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(SUPPORT_WRAP_EXTMEM)
+        | (1U << (PVRSRV_BRIDGE_MMEXTMEM - PVRSRV_BRIDGE_FIRST))
+#endif
+        | (1U << (PVRSRV_BRIDGE_SYNCTRACKING - PVRSRV_BRIDGE_FIRST))
+#if defined(SUPPORT_FALLBACK_FENCE_SYNC)
+        | (1U << (PVRSRV_BRIDGE_SYNCFALLBACK - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(SUPPORT_DI_BRG_IMPL)
+        | (1U << (PVRSRV_BRIDGE_DI - PVRSRV_BRIDGE_FIRST))
+#endif
+#if defined(SUPPORT_DMA_TRANSFER)
+        | (1U << (PVRSRV_BRIDGE_DMA - PVRSRV_BRIDGE_FIRST))
+#endif
+        ;
+
 /* Function pointer used to invalidate cache between loops in wait/poll for value functions */
 typedef PVRSRV_ERROR (*PFN_INVALIDATE_CACHEFUNC)(const volatile void*, IMG_UINT64, PVRSRV_CACHE_OP);
 

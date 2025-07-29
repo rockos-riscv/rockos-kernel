@@ -475,12 +475,6 @@ static const struct drm_prop_enum_list colorimetry_enum_list[] = {
 	{ ESWIN_HDMI_COLORIMETRY_BT2020, "ITU_2020" },
 };
 
-static const struct drm_prop_enum_list quant_range_enum_list[] = {
-	{ HDMI_QUANTIZATION_RANGE_DEFAULT, "default" },
-	{ HDMI_QUANTIZATION_RANGE_LIMITED, "limit" },
-	{ HDMI_QUANTIZATION_RANGE_FULL, "full" },
-};
-
 static const struct drm_prop_enum_list color_depth_capacity_list[] = {
 	{ BIT(ESWIN_HDMI_DEPTH_8), "8bit" },
 	{ BIT(ESWIN_HDMI_DEPTH_10), "10bit" },

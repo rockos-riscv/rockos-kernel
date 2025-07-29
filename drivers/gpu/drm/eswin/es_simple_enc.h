@@ -23,5 +23,12 @@ struct simple_encoder {
 	struct dss_data *dss_regdatas;
 };
 
+void encoder_atomic_enable(struct drm_encoder *encoder,
+                           struct drm_atomic_state *state);
+
+int encoder_atomic_check(struct drm_encoder *encoder,
+                         struct drm_crtc_state *crtc_state,
+                         struct drm_connector_state *conn_state);
+
 extern struct platform_driver simple_encoder_driver;
 #endif /* __ES_SIMPLE_ENC_H_ */

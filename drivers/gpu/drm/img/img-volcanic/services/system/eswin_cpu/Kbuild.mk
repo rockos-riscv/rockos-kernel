@@ -52,7 +52,4 @@ $(PVRSRVKM_NAME)-y += \
 ccflags-y += \
 	-I$(TOP)/services/system/eswin_cpu/common/env/linux \
 	-I$(TOP)/services/system/common/env/linux \
-	-I$(TOP)/services/include/env/linux \
-	-I$(TOP)/kernel/drivers/staging/imgtec/tc \
-	-I$(TOP)/include/system/$(PVR_SYSTEM)
 	

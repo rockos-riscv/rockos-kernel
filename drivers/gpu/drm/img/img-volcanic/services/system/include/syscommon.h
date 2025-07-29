@@ -172,4 +172,14 @@ IMG_BOOL SysRestrictGpuLocalAddPrivateHeap(void);
 */ /***************************************************************************/
 IMG_BOOL SysDefaultToCpuLocalHeap(void);
 
+void eswin_l2_flush64(phys_addr_t addr, size_t size);
+void riscv_invalidate_addr(phys_addr_t addr, size_t size,IMG_BOOL virtual);
+void riscv_flush_addr(IMG_UINT64 cpuaddr,IMG_UINT64 bytes_size, IMG_BOOL virtual);
+void riscv_flush_cache_range(IMG_HANDLE hSysData,
+                                        PVRSRV_CACHE_OP eRequestType,
+                                        void *pvVirtStart,
+                                        void *pvVirtEnd,
+                                        IMG_CPU_PHYADDR sCPUPhysStart,
+                                        IMG_CPU_PHYADDR sCPUPhysEnd);
+
 #endif /* !defined(SYSCOMMON_H) */
