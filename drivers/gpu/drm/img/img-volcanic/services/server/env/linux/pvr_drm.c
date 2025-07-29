@@ -515,6 +515,7 @@ const struct file_operations pvr_drm_fops = {
 	.mmap			= PVRSRV_MMap,
 	.poll			= drm_poll,
 	.read			= drm_read,
+	.fop_flags 		= FOP_UNSIGNED_OFFSET,
 #if defined(SUPPORT_LINUX_FDINFO)
 	.show_fdinfo	= pvr_show_fdinfo,
 #endif /* SUPPORT_LINUX_FDINFO */
