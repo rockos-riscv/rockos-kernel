@@ -349,16 +349,37 @@
 	status = "okay";
 	eswin,syscfg = <&d0_sys_con 0x3C0 15>;
 	i2c-sda-hold-time-ns = <0x40>;
+
 	pac1934:pac1934@10 {
 		compatible = "microchip,pac1934";
-		/*update all register data*/
-		update_time_ms = <1000>;
-		eswin,chan_label = "som vdd", "soc vdd", "cpu vdd", "ddr lpvdd";
-		label = "som_info";
-		/*The update number of times the energy accumulates*/
-		energy_acc_count = <0>;
-		shunt_resistors=<1 1 1 1>;
 		reg = <0x10>;
+
+		#address-cells = <1>;
+		#size-cells = <0>;
+
+		channel@1 {
+			reg = <0x1>;
+			shunt-resistor-micro-ohms = <1000>;
+			label = "som vdd";
+		};
+
+		channel@2 {
+			reg = <0x2>;
+			shunt-resistor-micro-ohms = <1000>;
+			label = "soc vdd";
+		};
+
+		channel@3 {
+			reg = <0x3>;
+			shunt-resistor-micro-ohms = <1000>;
+			label = "cpu vdd";
+		};
+
+		channel@4 {
+			reg = <0x4>;
+			shunt-resistor-micro-ohms = <1000>;
+			label = "ddr lpvdd";
+		};
 	};
 
 	sys_power:ina226@44 {
