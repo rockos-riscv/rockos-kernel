@@ -209,7 +209,16 @@ struct eswin_sdhci_data {
 	struct eswin_sdhci_clk_data clk_data;
 	const struct eswin_sdhci_clk_ops *clk_ops;
 	unsigned int quirks;
-	void __iomem *core_clk_reg;
+
+	struct regmap *crg_regmap;
+	unsigned int crg_core_clk;
+	unsigned int crg_aclk_ctrl;
+	unsigned int crg_cfg_ctrl;
+
+	struct regmap *hsp_regmap;
+	unsigned int hsp_int_status;
+	unsigned int hsp_pwr_ctrl;
+
 	struct reset_control *txrx_rst;
 	struct reset_control *phy_rst;
 	struct reset_control *prstn;

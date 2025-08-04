@@ -467,7 +467,8 @@
 		iommus = <&smmu0 EIC7700_SID_EMMC0>;
 		tbus = <EIC7700_TBUID_EMMC>;
 		dma-ranges = <0x0 0x00000000 0x0 0xc0000000 0x1 0x0>;
-		eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x1038>;
+		eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x1038 0x508 0x50c>;
+		eswin,syscrg_csr = <&d0_sys_crg 0x160 0x148 0x14c>;
 		status = "disabled";
 	};
 
@@ -488,14 +489,15 @@
 			<&d0_reset HSPDMA_RST_CTRL SW_HSP_SD0_PRSTN>,
 			<&d0_reset HSPDMA_RST_CTRL SW_HSP_SD0_ARSTN>;
 		reset-names = "txrx_rst","phy_rst","prstn","arstn";
-		core-clk-reg = <0x51828164>;
 		clock-frequency = <208000000>;
 		max-frequency = <208000000>;
-		#size-cells = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
 		dma-ranges = <0x0 0x20000000 0x0 0xc0000000 0x0 0x40000000>;
 		iommus = <&smmu0 EIC7700_SID_SD0>;
 		tbus = <EIC7700_TBUID_SD>;
-		eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x103c>;
+		eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x103c 0x608 0x60c>;
+		eswin,syscrg_csr = <&d0_sys_crg 0x164 0x148 0x14c>;
 		bus-width = <4>;
 		sdio-id = <0>;
 		status = "disabled";
@@ -521,11 +523,13 @@
 		core-clk-reg = <0x51828168>;
 		clock-frequency = <208000000>;
 		max-frequency = <208000000>;
-		#size-cells = <2>;
+		#address-cells = <1>;
+		#size-cells = <0>;
 		dma-ranges = <0x0 0x20000000 0x0 0xc0000000 0x0 0x40000000>;
 		iommus = <&smmu0 EIC7700_SID_SD1>;
 		tbus = <EIC7700_TBUID_SD>;
-		eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x1040>;
+		eswin,hsp_sp_csr = <&d0_hsp_sp_csr 0x1040 0x708 0x70c>;
+		eswin,syscrg_csr = <&d0_sys_crg 0x168 0x148 0x14c>;
 		bus-width = <4>;
 		sdio-id = <1>;
 		status = "disabled";

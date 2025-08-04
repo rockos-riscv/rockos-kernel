@@ -36,19 +36,8 @@
 #include <linux/iommu.h>
 #include "sdhci-eswin.h"
 
-
 #define ESWIN_SDHCI_SD_CQE_BASE_ADDR 0x180
-#define ESWIN_SDHCI_SD0_INT_STATUS 0x608
-#define ESWIN_SDHCI_SD0_PWR_CTRL 0x60c
-#define ESWIN_SDHCI_SD1_INT_STATUS 0x708
-#define ESWIN_SDHCI_SD1_PWR_CTRL 0x70c
-
-#define DELAY_RANGE_THRESHOLD   20
-
-struct eswin_sdio_private {
-	int phase_code;
-	unsigned int enable_sw_tuning;
-};
+#define TUNING_RANGE_THRESHOLD   40
 
 static inline void *sdhci_sdio_priv(struct eswin_sdhci_data *sdio)
 {
@@ -70,16 +59,15 @@ static void eswin_sdhci_sdio_set_clock(struct sdhci_host *host,
 	}
 
 	eswin_sdhci_set_core_clock(host, clock);
-	sdhci_set_clock(host, clock);
 
 	if (eswin_sdhci_sdio->quirks & SDHCI_ESWIN_QUIRK_CLOCK_UNSTABLE)
 		/*
-                 * Some controllers immediately report SDHCI_CLOCK_INT_STABLE
-                 * after enabling the clock even though the clock is not
-                 * stable. Trying to use a clock without waiting here results
-                 * in EILSEQ while detecting some older/slower cards. The
-                 * chosen delay is the maximum delay from sdhci_set_clock.
-                 */
+         * Some controllers immediately report SDHCI_CLOCK_INT_STABLE
+         * after enabling the clock even though the clock is not
+         * stable. Trying to use a clock without waiting here results
+         * in EILSEQ while detecting some older/slower cards. The
+         * chosen delay is the maximum delay from sdhci_set_clock.
+         */
 		msleep(20);
 }
 
@@ -157,7 +145,18 @@ static void eswin_sdhci_sdio_reset(struct sdhci_host *host, u8 mask)
 	 */
 	sdhci_writel(host, 0, SDHCI_INT_ENABLE);
 	sdhci_writel(host, 0, SDHCI_SIGNAL_ENABLE);
-	sdhci_reset(host, mask);
+
+	if (mask & SDHCI_RESET_ALL) {
+		sdhci_reset(host, SDHCI_RESET_ALL);
+	}
+	if (mask & SDHCI_RESET_DATA) {
+		sdhci_reset(host, SDHCI_RESET_DATA);
+	}
+
+	if (mask & SDHCI_RESET_CMD) {
+		sdhci_reset(host, SDHCI_RESET_CMD);
+	}
+
 	sdhci_writel(host, host->ier, SDHCI_INT_ENABLE);
 	sdhci_writel(host, host->ier, SDHCI_SIGNAL_ENABLE);
 
@@ -171,98 +170,52 @@ static void eswin_sdhci_sdio_reset(struct sdhci_host *host, u8 mask)
 	}
 }
 
-static int eswin_sdhci_sdio_delay_tuning(struct sdhci_host *host, u32 opcode)
-{
-	int ret;
-	int delay = -1;
-	int i = 0;
-	int delay_min = -1;
-	int delay_max = -1;
-	int delay_range = -1;
-
-	int cmd_error = 0;
-	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
-	struct eswin_sdhci_data *eswin_sdhci =
-		sdhci_pltfm_priv(pltfm_host);
-
-	for (i = 0; i <= PHY_DELAY_CODE_MAX; i++) {
-		eswin_sdhci_disable_card_clk(host);
-		eswin_sdhci_sdio_config_phy_delay(host, i);
-		eswin_sdhci_enable_card_clk(host);
-		ret = mmc_send_tuning(host->mmc, opcode, &cmd_error);
-		if (ret) {
-			host->ops->reset(host, SDHCI_RESET_CMD | SDHCI_RESET_DATA);
-			udelay(200);
-			if (delay_min != -1 && delay_max != -1) {
-				if (delay_max - delay_min > delay_range) {
-					delay_range = delay_max - delay_min;
-					delay = (delay_min + delay_max) / 2;
-					if (delay_range > DELAY_RANGE_THRESHOLD)
-						break;
-				}
-				delay_min = -1;
-				delay_max = -1;
-			}
-		} else {
-			if (delay_min == -1) {
-				delay_min = i;
-				continue;
-			} else {
-				delay_max = i;
-				continue;
-			}
-		}
-	}
-	if (delay == -1) {
-		pr_err("%s: delay code tuning failed!\n",
-		       mmc_hostname(host->mmc));
-		eswin_sdhci_disable_card_clk(host);
-		eswin_sdhci_sdio_config_phy_delay(host,
-						  eswin_sdhci->phy.delay_code);
-		eswin_sdhci_enable_card_clk(host);
-
-		return ret;
-	}
-
-	pr_info("%s: set delay:0x%x\n", mmc_hostname(host->mmc), delay);
-	eswin_sdhci_disable_card_clk(host);
-	eswin_sdhci_sdio_config_phy_delay(host, delay);
-	eswin_sdhci_enable_card_clk(host);
-
-	return 0;
-}
-
 static int eswin_sdhci_sdio_phase_code_tuning(struct sdhci_host *host,
 					      u32 opcode)
 {
 	int cmd_error = 0;
 	int ret = 0;
-	int phase_code = 0;
+	int phase_code = -1;
 	int code_min = -1;
 	int code_max = -1;
+	int code_range = -1;
+	int i = 0;
 
-	for (phase_code = 0; phase_code <= MAX_PHASE_CODE; phase_code++) {
+	for (i = 0; i <= MAX_PHASE_CODE; i++) {
 		eswin_sdhci_disable_card_clk(host);
-		sdhci_writew(host, phase_code, VENDOR_AT_SATA_R);
+		sdhci_writew(host, i, VENDOR_AT_SATA_R);
 		eswin_sdhci_enable_card_clk(host);
 
 		ret = mmc_send_tuning(host->mmc, opcode, &cmd_error);
+		host->ops->reset(host, SDHCI_RESET_CMD | SDHCI_RESET_DATA);
 		if (ret) {
-			host->ops->reset(host, SDHCI_RESET_CMD | SDHCI_RESET_DATA);
 			udelay(200);
-			if (code_min != -1 && code_max != -1)
-				break;
+			if (code_min != -1 && code_max != -1) {
+				if(code_max - code_min > code_range) {
+					code_range = code_max - code_min;
+					phase_code = (code_min + code_max) / 2;
+					if(code_range > TUNING_RANGE_THRESHOLD)
+						break;
+				}
+				code_min = -1;
+				code_max = -1;
+			}
 		} else {
 			if (code_min == -1) {
-				code_min = phase_code;
-				continue;
-			} else {
-				code_max = phase_code;
-				continue;
+				code_min = i;
 			}
+			code_max = i;
+			if (i == MAX_PHASE_CODE) {
+				if(code_max - code_min > code_range) {
+					code_range = code_max - code_min;
+					phase_code = (code_min + code_max) / 2;
+				}
+			}
+			continue;
 		}
 	}
-	if (code_min == -1 && code_max == -1) {
+
+	if (phase_code == -1) {
 		pr_err("%s: phase code tuning failed!\n",
 		       mmc_hostname(host->mmc));
 		eswin_sdhci_disable_card_clk(host);
@@ -271,12 +224,19 @@ static int eswin_sdhci_sdio_phase_code_tuning(struct sdhci_host *host,
 		return -EIO;
 	}
 
-	phase_code = (code_min + code_max) / 2;
-	pr_info("%s: set phase_code:0x%x\n", mmc_hostname(host->mmc), phase_code);
+	pr_debug("%s: set phase_code:0x%x\n", mmc_hostname(host->mmc), phase_code);
 
 	eswin_sdhci_disable_card_clk(host);
 	sdhci_writew(host, phase_code, VENDOR_AT_SATA_R);
 	eswin_sdhci_enable_card_clk(host);
+
+	ret = mmc_send_tuning(host->mmc, opcode, &cmd_error);
+	host->ops->reset(host, SDHCI_RESET_CMD | SDHCI_RESET_DATA);
+	if (ret) {
+		pr_err("%s: phase_code code(0x%x) not work, tuning failed!\n",
+		       mmc_hostname(host->mmc), phase_code);
+		return ret;
+	}
 
 	return 0;
 }
@@ -289,20 +249,9 @@ static int eswin_sdhci_sdio_executing_tuning(struct sdhci_host *host,
 	int ret = 0;
 	struct sdhci_pltfm_host *pltfm_host;
 	struct eswin_sdhci_data *eswin_sdhci_sdio;
-	struct eswin_sdio_private *eswin_sdio_priv;
 
 	pltfm_host = sdhci_priv(host);
 	eswin_sdhci_sdio = sdhci_pltfm_priv(pltfm_host);
-	eswin_sdio_priv = sdhci_sdio_priv(eswin_sdhci_sdio);
-
-	if (!eswin_sdio_priv->enable_sw_tuning) {
-		if (eswin_sdio_priv->phase_code != -1) {
-			eswin_sdhci_disable_card_clk(host);
-			sdhci_writew(host, eswin_sdio_priv->phase_code, VENDOR_AT_SATA_R);
-			eswin_sdhci_enable_card_clk(host);
-		}
-		return 0;
-	}
 
 	eswin_sdhci_disable_card_clk(host);
 
@@ -318,11 +267,6 @@ static int eswin_sdhci_sdio_executing_tuning(struct sdhci_host *host,
 	eswin_sdhci_enable_card_clk(host);
 
 	sdhci_writew(host, 0x0, SDHCI_CMD_DATA);
-
-	ret = eswin_sdhci_sdio_delay_tuning(host, opcode);
-	if (ret < 0) {
-		return ret;
-	}
 
 	ret = eswin_sdhci_sdio_phase_code_tuning(host, opcode);
 	if (ret < 0) {
@@ -385,9 +329,12 @@ static const struct sdhci_ops eswin_sdhci_sdio_cqe_ops = {
 
 static const struct sdhci_pltfm_data eswin_sdhci_sdio_cqe_pdata = {
 	.ops = &eswin_sdhci_sdio_cqe_ops,
-	.quirks = SDHCI_QUIRK_BROKEN_CQE | SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN,
+	.quirks = SDHCI_QUIRK_BROKEN_CQE |
+		SDHCI_QUIRK_SINGLE_POWER_WRITE |
+		SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN |
+		SDHCI_QUIRK_BROKEN_TIMEOUT_VAL,
 	.quirks2 = SDHCI_QUIRK2_PRESET_VALUE_BROKEN |
-		   SDHCI_QUIRK2_CLOCK_DIV_ZERO_BROKEN,
+		SDHCI_QUIRK2_CLOCK_DIV_ZERO_BROKEN,
 };
 
 #ifdef CONFIG_PM_SLEEP
@@ -407,21 +354,18 @@ static int eswin_sdhci_sdio_suspend(struct device *dev)
 		sdhci_pltfm_priv(pltfm_host);
 	int ret;
 
+	pm_runtime_get_sync(dev);
+
 	if (host->tuning_mode != SDHCI_TUNING_MODE_3)
 		mmc_retune_needed(host->mmc);
-
-	if (eswin_sdhci_sdio->has_cqe) {
-		ret = cqhci_suspend(host->mmc);
-		if (ret)
-			return ret;
-	}
 
 	ret = sdhci_suspend_host(host);
 	if (ret)
 		return ret;
 
-	clk_disable(pltfm_host->clk);
-	clk_disable(eswin_sdhci_sdio->clk_ahb);
+	eic7700_tbu_power(dev, false);
+	clk_disable_unprepare(pltfm_host->clk);
+	clk_disable_unprepare(eswin_sdhci_sdio->clk_ahb);
 
 	return 0;
 }
@@ -442,33 +386,91 @@ static int eswin_sdhci_sdio_resume(struct device *dev)
 		sdhci_pltfm_priv(pltfm_host);
 	int ret;
 
-	ret = clk_enable(eswin_sdhci_sdio->clk_ahb);
+	pm_runtime_put_sync(dev);
+	ret = clk_prepare_enable(eswin_sdhci_sdio->clk_ahb);
 	if (ret) {
 		dev_err(dev, "Cannot enable AHB clock.\n");
 		return ret;
 	}
 
-	ret = clk_enable(pltfm_host->clk);
+	ret = clk_prepare_enable(pltfm_host->clk);
 	if (ret) {
 		dev_err(dev, "Cannot enable SD clock.\n");
-		return ret;
+		goto clk_ahb_disable;
 	}
+	eic7700_tbu_power(dev, true);
 
 	ret = sdhci_resume_host(host);
 	if (ret) {
 		dev_err(dev, "Cannot resume host.\n");
-		return ret;
+		goto clk_disable;
 	}
 
-	if (eswin_sdhci_sdio->has_cqe)
-		return cqhci_resume(host->mmc);
+	return 0;
+clk_disable:
+	clk_disable_unprepare(pltfm_host->clk);
+clk_ahb_disable:
+	clk_disable_unprepare(eswin_sdhci_sdio->clk_ahb);
+
+	return ret;
+}
+
+static int eswin_sdhci_sdio_runtime_suspend(struct device *dev)
+{
+	struct sdhci_host *host = dev_get_drvdata(dev);
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct eswin_sdhci_data *eswin_sdhci_sdio = sdhci_pltfm_priv(pltfm_host);
+	int ret;
+
+	ret = sdhci_runtime_suspend_host(host);
+	if (ret)
+		return ret;
+
+	if (host->tuning_mode != SDHCI_TUNING_MODE_3)
+		mmc_retune_needed(host->mmc);
+
+	eic7700_tbu_power(dev, false);
+	clk_disable_unprepare(pltfm_host->clk);
+	clk_disable_unprepare(eswin_sdhci_sdio->clk_ahb);
 
 	return 0;
 }
-#endif /* ! CONFIG_PM_SLEEP */
 
-static SIMPLE_DEV_PM_OPS(eswin_sdhci_sdio_dev_pm_ops, eswin_sdhci_sdio_suspend,
-			 eswin_sdhci_sdio_resume);
+static int eswin_sdhci_sdio_runtime_resume(struct device *dev)
+{
+	struct sdhci_host *host = dev_get_drvdata(dev);
+	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
+	struct eswin_sdhci_data *eswin_sdhci_sdio = sdhci_pltfm_priv(pltfm_host);
+	int ret;
+
+	ret = clk_prepare_enable(eswin_sdhci_sdio->clk_ahb);
+	if (ret) {
+		dev_err(dev, "can't enable clk_ahb\n");
+		return ret;
+	}
+
+	ret = clk_prepare_enable(pltfm_host->clk);
+	if (ret) {
+		dev_err(dev, "can't enable mainck\n");
+		goto clk_ahb_disable;
+	}
+	eic7700_tbu_power(dev, true);
+
+	ret = sdhci_runtime_resume_host(host, 1);
+	if (ret) {
+		dev_err(dev, "runtime resume failed!\n");
+		goto clk_disable;
+	}
+
+	return 0;
+clk_disable:
+	clk_disable_unprepare(pltfm_host->clk);
+clk_ahb_disable:
+	clk_disable_unprepare(eswin_sdhci_sdio->clk_ahb);
+
+	return ret;
+}
+#endif /* ! CONFIG_PM_SLEEP */
 
 /**
  * eswin_sdhci_sdio_sdcardclk_recalc_rate- Return the card clock rate
@@ -587,6 +589,7 @@ static int eswin_sdhci_sdio_register_sdcardclk(
 	clk_data->sdcardclk = devm_clk_register(dev, &clk_data->sdcardclk_hw);
 	if (IS_ERR(clk_data->sdcardclk))
 		return PTR_ERR(clk_data->sdcardclk);
+
 	clk_data->sdcardclk_hw.init = NULL;
 
 	ret = of_clk_add_provider(np, of_clk_src_simple_get,
@@ -817,14 +820,11 @@ static int eswin_sdhci_sdio_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct device_node *np = dev->of_node;
 	struct eswin_sdhci_data *eswin_sdhci_sdio;
-	struct eswin_sdio_private *eswin_sdio_priv;
-	struct regmap *regmap;
 	const struct eswin_sdhci_of_data *data;
-	unsigned int sdio_id = 0;
 	unsigned int val = 0;
 
 	data = of_device_get_match_data(dev);
-	host = sdhci_pltfm_init(pdev, data->pdata, sizeof(*eswin_sdhci_sdio) + sizeof(*eswin_sdio_priv));
+	host = sdhci_pltfm_init(pdev, data->pdata, sizeof(*eswin_sdhci_sdio));
 
 	if (IS_ERR(host))
 		return PTR_ERR(host);
@@ -833,25 +833,6 @@ static int eswin_sdhci_sdio_probe(struct platform_device *pdev)
 	eswin_sdhci_sdio = sdhci_pltfm_priv(pltfm_host);
 	eswin_sdhci_sdio->host = host;
 	eswin_sdhci_sdio->has_cqe = false;
-	eswin_sdio_priv = sdhci_sdio_priv(eswin_sdhci_sdio);
-
-	ret = of_property_read_u32(dev->of_node, "core-clk-reg", &val);
-	if (ret) {
-		dev_err(dev, "get core clk reg failed.\n");
-		goto err_pltfm_free;
-	}
-
-	eswin_sdhci_sdio->core_clk_reg = ioremap(val, 0x4);
-	if (!eswin_sdhci_sdio->core_clk_reg) {
-		dev_err(dev, "ioremap core clk reg failed.\n");
-		goto err_pltfm_free;
-	}
-
-	ret = of_property_read_u32(dev->of_node, "sdio-id", &sdio_id);
-	if (ret) {
-		dev_err(dev, "get sdio-id failed.\n");
-		goto err_pltfm_free;
-	}
 
 	sdhci_get_of_property(pdev);
 
@@ -920,22 +901,53 @@ static int eswin_sdhci_sdio_probe(struct platform_device *pdev)
 		goto clk_disable_all;
 	}
 
-	regmap = syscon_regmap_lookup_by_phandle(dev->of_node,
-						 "eswin,hsp_sp_csr");
-	if (IS_ERR(regmap)) {
-		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
-		return 0;
+	eswin_sdhci_sdio->crg_regmap = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "eswin,syscrg_csr");
+	if (IS_ERR(eswin_sdhci_sdio->crg_regmap)){
+		dev_dbg(&pdev->dev, "No syscrg_csr phandle specified\n");
+		goto clk_disable_all;
 	}
 
-	if (sdio_id == 0) {
-		regmap_write(regmap, ESWIN_SDHCI_SD0_INT_STATUS,
-			     MSHC_INT_CLK_STABLE);
-		regmap_write(regmap, ESWIN_SDHCI_SD0_PWR_CTRL, MSHC_HOST_VAL_STABLE);
-	} else {
-		regmap_write(regmap, ESWIN_SDHCI_SD1_INT_STATUS,
-			     MSHC_INT_CLK_STABLE);
-		regmap_write(regmap, ESWIN_SDHCI_SD1_PWR_CTRL, MSHC_HOST_VAL_STABLE);
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,syscrg_csr", 1,
+                                    &eswin_sdhci_sdio->crg_core_clk);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get crg_core_clk (%d)\n", ret);
+		goto clk_disable_all;
 	}
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,syscrg_csr", 2,
+                                    &eswin_sdhci_sdio->crg_aclk_ctrl);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get crg_aclk_ctrl (%d)\n", ret);
+		goto clk_disable_all;
+	}
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,syscrg_csr", 3,
+                                    &eswin_sdhci_sdio->crg_cfg_ctrl);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get crg_cfg_ctrl (%d)\n", ret);
+		goto clk_disable_all;
+	}
+
+	eswin_sdhci_sdio->hsp_regmap = syscon_regmap_lookup_by_phandle(dev->of_node,
+						 "eswin,hsp_sp_csr");
+	if (IS_ERR(eswin_sdhci_sdio->hsp_regmap)) {
+		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
+		goto clk_disable_all;
+	}
+
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,hsp_sp_csr", 2,
+                                    &eswin_sdhci_sdio->hsp_int_status);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get hsp_int_status (%d)\n", ret);
+		goto clk_disable_all;
+	}
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,hsp_sp_csr", 3,
+                                    &eswin_sdhci_sdio->hsp_pwr_ctrl);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get hsp_pwr_ctrl (%d)\n", ret);
+		goto clk_disable_all;
+	}
+
+	regmap_write(eswin_sdhci_sdio->hsp_regmap, eswin_sdhci_sdio->hsp_int_status, MSHC_INT_CLK_STABLE);
+	regmap_write(eswin_sdhci_sdio->hsp_regmap, eswin_sdhci_sdio->hsp_pwr_ctrl, MSHC_HOST_VAL_STABLE);
 
 	ret = eswin_sdhci_sdio_sid_cfg(dev);
 	if (ret < 0) {
@@ -961,17 +973,6 @@ static int eswin_sdhci_sdio_probe(struct platform_device *pdev)
 	else
 		eswin_sdhci_sdio->phy.enable_data_pullup = DISABLE;
 
-	if (of_property_read_bool(dev->of_node, "enable_sw_tuning"))
-		eswin_sdio_priv->enable_sw_tuning = ENABLE;
-	else
-		eswin_sdio_priv->enable_sw_tuning = DISABLE;
-
-	if (!of_property_read_u32(dev->of_node, "phase_code", &val)) {
-		eswin_sdio_priv->phase_code = val;
-	} else {
-		eswin_sdio_priv->phase_code = -1;
-	}
-
 	eswin_sdhci_dt_parse_clk_phases(dev, &eswin_sdhci_sdio->clk_data);
 	ret = mmc_of_parse(host->mmc);
 	if (ret) {
@@ -985,6 +986,12 @@ static int eswin_sdhci_sdio_probe(struct platform_device *pdev)
 	if (ret)
 		goto unreg_clk;
 
+	pm_runtime_set_active(&pdev->dev);
+	pm_runtime_set_autosuspend_delay(&pdev->dev, 50);
+	pm_runtime_use_autosuspend(&pdev->dev);
+	pm_suspend_ignore_children(&pdev->dev, 1);
+	pm_runtime_enable(&pdev->dev);
+
 	return 0;
 
 unreg_clk:
@@ -994,9 +1001,6 @@ clk_disable_all:
 clk_dis_ahb:
 	clk_disable_unprepare(eswin_sdhci_sdio->clk_ahb);
 err_pltfm_free:
-	if (eswin_sdhci_sdio->core_clk_reg)
-		iounmap(eswin_sdhci_sdio->core_clk_reg);
-
 	sdhci_pltfm_free(pdev);
 	return ret;
 }
@@ -1009,7 +1013,10 @@ static void eswin_sdhci_sdio_remove(struct platform_device *pdev)
 	struct eswin_sdhci_data *eswin_sdhci_sdio =
 		sdhci_pltfm_priv(pltfm_host);
 	struct clk *clk_ahb = eswin_sdhci_sdio->clk_ahb;
-	void __iomem *core_clk_reg = eswin_sdhci_sdio->core_clk_reg;
+
+	pm_runtime_get_sync(&pdev->dev);
+	pm_runtime_disable(&pdev->dev);
+	pm_runtime_put_noidle(&pdev->dev);
 
 	sdhci_pltfm_remove(pdev);
 	eic7700_tbu_power(&pdev->dev, false);
@@ -1036,15 +1043,20 @@ static void eswin_sdhci_sdio_remove(struct platform_device *pdev)
 
 	eswin_sdhci_sdio_unregister_sdclk(&pdev->dev);
 	clk_disable_unprepare(clk_ahb);
-	iounmap(core_clk_reg);
 }
+
+static const struct dev_pm_ops eswin_sdhci_sdio_pmops = {
+	SET_SYSTEM_SLEEP_PM_OPS(eswin_sdhci_sdio_suspend, eswin_sdhci_sdio_resume)
+	SET_RUNTIME_PM_OPS(eswin_sdhci_sdio_runtime_suspend,
+			   eswin_sdhci_sdio_runtime_resume, NULL)
+};
 
 static struct platform_driver eswin_sdhci_sdio_driver = {
 	.driver = {
 		.name = "eswin-sdhci-sdio",
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 		.of_match_table = eswin_sdhci_sdio_of_match,
-		.pm = &eswin_sdhci_sdio_dev_pm_ops,
+		.pm = &eswin_sdhci_sdio_pmops,
 	},
 	.probe = eswin_sdhci_sdio_probe,
 	.remove = eswin_sdhci_sdio_remove,

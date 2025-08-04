@@ -21,6 +21,7 @@
  */
 #include <linux/delay.h>
 #include <linux/reset.h>
+#include <linux/regmap.h>
 #include "sdhci-eswin.h"
 
 static void eswin_mshc_coreclk_config(struct sdhci_host *host, uint16_t divisor,
@@ -34,9 +35,9 @@ static void eswin_mshc_coreclk_config(struct sdhci_host *host, uint16_t divisor,
 	pltfm_host = sdhci_priv(host);
 	eswin_sdhci = sdhci_pltfm_priv(pltfm_host);
 
-	val = readl(eswin_sdhci->core_clk_reg);
+	regmap_read(eswin_sdhci->crg_regmap, eswin_sdhci->crg_core_clk, &val);
 	val &= ~MSHC_CORE_CLK_ENABLE;
-	writel(val, eswin_sdhci->core_clk_reg);
+	regmap_write(eswin_sdhci->crg_regmap, eswin_sdhci->crg_core_clk, val);
 	while (delay--)
 		;
 	val &= ~(MSHC_CORE_CLK_FREQ_BIT_MASK << MSHC_CORE_CLK_FREQ_BIT_SHIFT);
@@ -44,11 +45,11 @@ static void eswin_mshc_coreclk_config(struct sdhci_host *host, uint16_t divisor,
 	       << MSHC_CORE_CLK_FREQ_BIT_SHIFT;
 	val &= ~(MSHC_CORE_CLK_SEL_BIT);
 	val |= flag_sel;
-	writel(val, eswin_sdhci->core_clk_reg);
+	regmap_write(eswin_sdhci->crg_regmap, eswin_sdhci->crg_core_clk, val);
 
 	udelay(100);
 	val |= MSHC_CORE_CLK_ENABLE;
-	writel(val, eswin_sdhci->core_clk_reg);
+	regmap_write(eswin_sdhci->crg_regmap, eswin_sdhci->crg_core_clk, val);
 	mdelay(1);
 }
 
@@ -61,9 +62,9 @@ static void eswin_mshc_coreclk_disable(struct sdhci_host *host)
 	pltfm_host = sdhci_priv(host);
 	eswin_sdhci = sdhci_pltfm_priv(pltfm_host);
 
-	val = readl(eswin_sdhci->core_clk_reg);
+	regmap_read(eswin_sdhci->crg_regmap, eswin_sdhci->crg_core_clk, &val);
 	val &= ~MSHC_CORE_CLK_ENABLE;
-	writel(val, eswin_sdhci->core_clk_reg);
+	regmap_write(eswin_sdhci->crg_regmap, eswin_sdhci->crg_core_clk, val);
 }
 
 void eswin_sdhci_disable_card_clk(struct sdhci_host *host)
@@ -111,6 +112,8 @@ void eswin_sdhci_set_core_clock(struct sdhci_host *host,
 {
 	unsigned int div, divide;
 	unsigned int flag_sel, max_clk;
+
+	host->mmc->actual_clock = clock;
 
 	if (clock == 0) {
 		eswin_mshc_coreclk_disable(host);

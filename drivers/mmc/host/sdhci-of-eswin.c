@@ -36,9 +36,6 @@
 #include <linux/eic7700-sid-cfg.h>
 #include "sdhci-eswin.h"
 
-#define SDHCI_EMMC0_INT_STATUS 0x508
-#define SDHCI_EMMC0_PWR_CLEAR 0x50c
-
 #define eswin_sdhci_VENDOR_REGISTER_BASEADDR 0x800
 #define eswin_sdhci_VENDOR_EMMC_CTRL_REGISTER 0x2c
 #define VENDOR_ENHANCED_STROBE BIT(8)
@@ -61,8 +58,6 @@
 #define HIWORD_UPDATE(val, mask, shift) \
 	((val) << (shift) | (mask) << ((shift) + 16))
 
-#define ESWIN_EMMC_CORE_CLK_REG 0x51828160
-
 static void eswin_sdhci_set_clock(struct sdhci_host *host, unsigned int clock)
 {
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
@@ -74,7 +69,6 @@ static void eswin_sdhci_set_clock(struct sdhci_host *host, unsigned int clock)
 		clk_data->set_clk_delays(host);
 
 	eswin_sdhci_set_core_clock(host, clock);
-	sdhci_set_clock(host, clock);
 
 	/*
 	 * Some controllers immediately report SDHCI_CLOCK_INT_STABLE
@@ -270,7 +264,7 @@ static int eswin_sdhci_delay_tuning(struct sdhci_host *host, u32 opcode)
 	}
 
 	delay = (delay_min + delay_max) / 2;
-	pr_info("%s: set delay:0x%x\n", mmc_hostname(host->mmc), delay);
+	pr_debug("%s: set delay:0x%x\n", mmc_hostname(host->mmc), delay);
 	eswin_sdhci_disable_card_clk(host);
 	eswin_sdhci_config_phy_delay(host, delay);
 	eswin_sdhci_enable_card_clk(host);
@@ -317,7 +311,7 @@ static int eswin_sdhci_phase_code_tuning(struct sdhci_host *host, u32 opcode)
 	}
 
 	phase_code = (code_min + code_max) / 2;
-	pr_info("%s: set phase_code:0x%x\n", mmc_hostname(host->mmc), phase_code);
+	pr_debug("%s: set phase_code:0x%x\n", mmc_hostname(host->mmc), phase_code);
 
 	eswin_sdhci_disable_card_clk(host);
 	sdhci_writew(host, phase_code, VENDOR_AT_SATA_R);
@@ -385,7 +379,6 @@ static void eswin_sdhci_set_uhs_signaling(struct sdhci_host *host, unsigned timi
 		ctrl_2 |= ESWIN_SDHCI_CTRL_HS400; /* Non-standard */
 	sdhci_writew(host, ctrl_2, SDHCI_HOST_CONTROL2);
 
-
 	/*
 	 * here need make dll locked when in hs400 at 200MHz
 	 */
@@ -452,7 +445,8 @@ static const struct sdhci_ops eswin_sdhci_cqe_ops = {
 
 static const struct sdhci_pltfm_data eswin_sdhci_cqe_pdata = {
 	.ops = &eswin_sdhci_cqe_ops,
-	.quirks = SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN,
+	.quirks = SDHCI_QUIRK_CAP_CLOCK_BASE_BROKEN |
+		SDHCI_QUIRK_BROKEN_TIMEOUT_VAL,
 	.quirks2 = SDHCI_QUIRK2_PRESET_VALUE_BROKEN |
 #if defined(__DISABLE_HS200)
 		SDHCI_QUIRK2_BROKEN_HS200 |
@@ -479,18 +473,13 @@ static int eswin_sdhci_suspend(struct device *dev)
 	if (host->tuning_mode != SDHCI_TUNING_MODE_3)
 		mmc_retune_needed(host->mmc);
 
-	if (eswin_sdhci->has_cqe) {
-		ret = cqhci_suspend(host->mmc);
-		if (ret)
-			return ret;
-	}
-
 	ret = sdhci_suspend_host(host);
 	if (ret)
 		return ret;
 
-	clk_disable(pltfm_host->clk);
-	clk_disable(eswin_sdhci->clk_ahb);
+	eic7700_tbu_power(dev, false);
+	clk_disable_unprepare(pltfm_host->clk);
+	clk_disable_unprepare(eswin_sdhci->clk_ahb);
 
 	return 0;
 }
@@ -510,33 +499,35 @@ static int eswin_sdhci_resume(struct device *dev)
 	struct eswin_sdhci_data *eswin_sdhci = sdhci_pltfm_priv(pltfm_host);
 	int ret;
 
-	ret = clk_enable(eswin_sdhci->clk_ahb);
+	ret = clk_prepare_enable(eswin_sdhci->clk_ahb);
 	if (ret) {
 		dev_err(dev, "Cannot enable AHB clock.\n");
 		return ret;
 	}
 
-	ret = clk_enable(pltfm_host->clk);
+	ret = clk_prepare_enable(pltfm_host->clk);
 	if (ret) {
 		dev_err(dev, "Cannot enable SD clock.\n");
-		return ret;
+		goto clk_ahb_disable;
 	}
+
+	eic7700_tbu_power(dev, true);
 
 	ret = sdhci_resume_host(host);
 	if (ret) {
 		dev_err(dev, "Cannot resume host.\n");
-		return ret;
+		goto clk_disable;
 	}
 
-	if (eswin_sdhci->has_cqe)
-		return cqhci_resume(host->mmc);
-
 	return 0;
+clk_disable:
+	clk_disable_unprepare(pltfm_host->clk);
+clk_ahb_disable:
+	clk_disable_unprepare(eswin_sdhci->clk_ahb);
+
+	return ret;
 }
 #endif /* ! CONFIG_PM_SLEEP */
-
-static SIMPLE_DEV_PM_OPS(eswin_sdhci_dev_pm_ops, eswin_sdhci_suspend,
-			 eswin_sdhci_resume);
 
 /**
  * eswin_sdhci_sdcardclk_recalc_rate - Return the card clock rate
@@ -872,7 +863,6 @@ static int eswin_sdhci_probe(struct platform_device *pdev)
 	struct device *dev = &pdev->dev;
 	struct eswin_sdhci_data *eswin_sdhci;
 	const struct eswin_sdhci_of_data *data;
-	struct regmap *regmap;
 	unsigned int val = 0;
 
 	data = of_device_get_match_data(dev);
@@ -884,12 +874,6 @@ static int eswin_sdhci_probe(struct platform_device *pdev)
 	eswin_sdhci = sdhci_pltfm_priv(pltfm_host);
 	eswin_sdhci->host = host;
 	eswin_sdhci->clk_ops = data->clk_ops;
-
-	eswin_sdhci->core_clk_reg = ioremap(ESWIN_EMMC_CORE_CLK_REG, 0x4);
-	if (!eswin_sdhci->core_clk_reg) {
-		dev_err(dev, "ioremap core clk reg failed.\n");
-		goto err_pltfm_free;
-	}
 
 	eswin_sdhci->clk_ahb = devm_clk_get(dev, "clk_ahb");
 	if (IS_ERR(eswin_sdhci->clk_ahb)) {
@@ -925,15 +909,53 @@ static int eswin_sdhci_probe(struct platform_device *pdev)
 
 	eic7700_tbu_power(dev, true);
 
-	regmap = syscon_regmap_lookup_by_phandle(dev->of_node,
+	eswin_sdhci->crg_regmap = syscon_regmap_lookup_by_phandle(pdev->dev.of_node, "eswin,syscrg_csr");
+	if (IS_ERR(eswin_sdhci->crg_regmap)){
+		dev_dbg(&pdev->dev, "No syscrg_csr phandle specified\n");
+		goto clk_disable_all;
+	}
+
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,syscrg_csr", 1,
+                                    &eswin_sdhci->crg_core_clk);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get crg_core_clk (%d)\n", ret);
+		goto clk_disable_all;
+	}
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,syscrg_csr", 2,
+                                    &eswin_sdhci->crg_aclk_ctrl);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get crg_aclk_ctrl (%d)\n", ret);
+		goto clk_disable_all;
+	}
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,syscrg_csr", 3,
+                                    &eswin_sdhci->crg_cfg_ctrl);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get crg_cfg_ctrl (%d)\n", ret);
+		goto clk_disable_all;
+	}
+
+	eswin_sdhci->hsp_regmap = syscon_regmap_lookup_by_phandle(dev->of_node,
 						 "eswin,hsp_sp_csr");
-	if (IS_ERR(regmap)) {
+	if (IS_ERR(eswin_sdhci->hsp_regmap)) {
 		dev_dbg(dev, "No hsp_sp_csr phandle specified\n");
 		goto clk_disable_all;
 	}
 
-	regmap_write(regmap, SDHCI_EMMC0_INT_STATUS, MSHC_INT_CLK_STABLE);
-	regmap_write(regmap, SDHCI_EMMC0_PWR_CLEAR, MSHC_HOST_VAL_STABLE);
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,hsp_sp_csr", 2,
+                                    &eswin_sdhci->hsp_int_status);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get hsp_int_status (%d)\n", ret);
+		goto clk_disable_all;
+	}
+	ret = of_property_read_u32_index(pdev->dev.of_node, "eswin,hsp_sp_csr", 3,
+                                    &eswin_sdhci->hsp_pwr_ctrl);
+	if (ret) {
+		dev_err(&pdev->dev, "can't get hsp_pwr_ctrl (%d)\n", ret);
+		goto clk_disable_all;
+	}
+
+	regmap_write(eswin_sdhci->hsp_regmap, eswin_sdhci->hsp_int_status, MSHC_INT_CLK_STABLE);
+	regmap_write(eswin_sdhci->hsp_regmap, eswin_sdhci->hsp_pwr_ctrl, MSHC_HOST_VAL_STABLE);
 
 	/* smmu */
 	eswin_emmc_sid_cfg(dev);
@@ -1002,8 +1024,6 @@ clk_disable_all:
 clk_dis_ahb:
 	clk_disable_unprepare(eswin_sdhci->clk_ahb);
 err_pltfm_free:
-	if (eswin_sdhci->core_clk_reg)
-		iounmap(eswin_sdhci->core_clk_reg);
 	sdhci_pltfm_free(pdev);
 	return ret;
 }
@@ -1015,7 +1035,6 @@ static void eswin_sdhci_remove(struct platform_device *pdev)
 	struct sdhci_pltfm_host *pltfm_host = sdhci_priv(host);
 	struct eswin_sdhci_data *eswin_sdhci = sdhci_pltfm_priv(pltfm_host);
 	struct clk *clk_ahb = eswin_sdhci->clk_ahb;
-	void __iomem *core_clk_reg = eswin_sdhci->core_clk_reg;
 
 	sdhci_pltfm_remove(pdev);
 	eic7700_tbu_power(&pdev->dev, false);
@@ -1041,7 +1060,6 @@ static void eswin_sdhci_remove(struct platform_device *pdev)
 	}
 	eswin_sdhci_unregister_sdclk(&pdev->dev);
 	clk_disable_unprepare(clk_ahb);
-	iounmap(core_clk_reg);
 }
 
 static void emmc_hard_reset(struct sdhci_host *host)
@@ -1070,13 +1088,17 @@ static void eswin_sdhci_shutdown(struct platform_device *pdev)
 	platform_set_drvdata(pdev, NULL);
 }
 
+static const struct dev_pm_ops eswin_sdhci_pmops = {
+	SET_SYSTEM_SLEEP_PM_OPS(eswin_sdhci_suspend, eswin_sdhci_resume)
+};
+
 static struct platform_driver eswin_sdhci_driver =
 {
 	.driver = {
 		.name = "sdhci-eswin",
 		.probe_type = PROBE_PREFER_ASYNCHRONOUS,
 		.of_match_table = eswin_sdhci_of_match,
-		.pm = &eswin_sdhci_dev_pm_ops,
+		.pm = &eswin_sdhci_pmops,
 	},
 	.probe = eswin_sdhci_probe,
 	.remove = eswin_sdhci_remove,

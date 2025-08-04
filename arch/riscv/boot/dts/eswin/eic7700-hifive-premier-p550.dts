@@ -170,17 +170,22 @@
 	enable-data-pullup;
 	pinctrl-names = "default";
 	pinctrl-0 = <&pinctrl_emmc_led_control_default>;
+	no-sdio;
+	no-sd;
 };
 
 &sdio0 {
 	/* sd card */
 	status = "okay";
-	delay_code = <0x29>;
+	delay_code = <0x55>;
 	drive-impedance-ohm = <33>;
 	enable-cmd-pullup;
 	enable-data-pullup;
 	no-sdio;
 	no-mmc;
+	pinctrl-names = "default";
+	pinctrl-0 = <&pinctrl_gpio13_default>;
+	cd-gpios = <&porta 13 GPIO_ACTIVE_LOW>;
 };
 
 &sdio1 {
