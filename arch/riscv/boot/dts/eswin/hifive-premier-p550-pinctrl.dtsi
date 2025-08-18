@@ -15,6 +15,7 @@
         pinctrl: pinctrl@0x51600080 {
 			compatible = "eswin,eic7x-pinctrl", "syscon";
 			reg = <0x0 0x51600080 0x0 0x1fff80>;
+			vrgmii-supply = <1800000>;
 			status = "disabled";
 
 			//func1
@@ -107,26 +108,36 @@
 			gpio6_pins: gpio6-pins {
 				pins = "spi2_cs0_n";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio7_pins: gpio7-pins {
 				pins = "jtag1_tck";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio8_pins: gpio8-pins {
 				pins = "jtag1_tms";
 				function = "gpio";
+				input-enable;
+				bias-pull-up;
 			};
 
 			gpio9_pins: gpio9-pins {
 				pins = "jtag1_tdi";
 				function = "gpio";
+				input-enable;
+				bias-pull-up;
 			};
 
 			gpio10_pins: gpio10-pins {
 				pins = "jtag1_tdo";
 				function = "gpio";
+				input-enable;
+				bias-pull-up;
 			};
 
 			gpio12_pins: gpio12-pins {
@@ -152,31 +163,43 @@
 			gpio16_pins: gpio16-pins {
 				pins = "mode_set3";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio17_pins: gpio17-pins {
 				pins = "jtag2_trst";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio18_pins: gpio18-pins {
 				pins = "i2s0_bclk";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio19_pins: gpio19-pins {
 				pins = "i2s0_wclk";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio20_pins: gpio20-pins {
 				pins = "i2s0_sdi";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio21_pins: gpio21-pins {
 				pins = "i2s0_sdo";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio22_pins: gpio22-pins {
@@ -202,6 +225,8 @@
 			gpio26_pins: gpio26-pins {
 				pins = "i2s2_sdo";
 				function = "gpio";
+				input-enable;
+				bias-pull-up;
 			};
 
 			gpio29_pins: gpio29-pins {
@@ -238,31 +263,43 @@
 			gpio35_pins: gpio35-pins {
 				pins = "spi1_cs0_n";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio36_pins: gpio36-pins {
 				pins = "spi1_clk";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio37_pins: gpio37-pins {
 				pins = "spi1_d0";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio38_pins: gpio38-pins {
 				pins = "spi1_d1";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio39_pins: gpio39-pins {
 				pins = "spi1_d2";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio40_pins: gpio40-pins {
 				pins = "spi1_d3";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio41_pins: gpio41-pins {
@@ -273,6 +310,8 @@
 			gpio42_pins: gpio42-pins {
 				pins = "usb0_pwren";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio43_pins: gpio43-pins {
@@ -293,11 +332,15 @@
 			gpio46_pins: gpio46-pins {
 				pins = "i2c1_scl";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio47_pins: gpio47-pins {
 				pins = "i2c1_sda";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio48_pins: gpio48-pins {
@@ -323,11 +366,15 @@
 			gpio52_pins: gpio52-pins {
 				pins = "i2c4_scl";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio53_pins: gpio53-pins {
 				pins = "i2c4_sda";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio54_pins: gpio54-pins {
@@ -383,21 +430,29 @@
 			gpio64_pins: gpio64-pins {
 				pins = "jtag2_tck";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio65_pins: gpio65-pins {
 				pins = "jtag2_tms";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio66_pins: gpio66-pins {
 				pins = "jtag2_tdi";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio67_pins: gpio67-pins {
 				pins = "jtag2_tdo";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio68_pins: gpio68-pins {
@@ -523,16 +578,22 @@
 			gpio92_pins: gpio92-pins {
 				pins = "gpio92";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio93_pins: gpio93-pins {
 				pins = "gpio93";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio94_pins: gpio94-pins {
 				pins = "s_mode";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio95_pins: gpio95-pins {
@@ -593,21 +654,29 @@
 			gpio107_pins: gpio107-pins {
 				pins = "boot_sel0";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 			
 			gpio108_pins: gpio108-pins {
 				pins = "boot_sel1";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio109_pins: gpio109-pins {
 				pins = "boot_sel2";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			gpio110_pins: gpio110-pins {
 				pins = "boot_sel3";
 				function = "gpio";
+				input-enable;
+				bias-pull-down;
 			};
 
 			//func3
@@ -832,3 +901,4 @@
 		};
     };
 };
+

@@ -575,7 +575,7 @@
 		pwm-minimum-period = <1000>;
 		pwms = <&pwm0 0 100000>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_fan_tach_default>;
+		pinctrl-0 = <&fan_tach_pins>;
 		resets = <&d0_reset FAN_RST_CTRL SW_FAN_RST_N>;
 		reset-names = "fan_rst";
 		status = "disabled";
@@ -821,7 +821,7 @@
 		clocks = <&d0_clock EIC7700_CLK_LSP_TIMER_PCLK>;
 		clock-frequency = <200000000>;
 		pinctrl-names = "default";
-		pinctrl-0 = <&pinctrl_pwm0_default>;
+		pinctrl-0 = <&fan_pwm_pins>;
 		reg = <0x0 0x50818000 0x0 0x4000>;
 		resets = <&d0_reset TIMER_RST_CTRL SW_TIMER_RST_N>;
 		reset-names = "pwmrst";
