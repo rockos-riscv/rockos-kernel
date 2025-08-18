@@ -88,6 +88,7 @@ config SOC_CANAAN_K210
 
 config SOC_SIFIVE_EIC7700
 	bool "ESWIN EIC7700x SoCs"
+	select IOMMU_DMA
 	help
 	  This enables support for ESWIN EIC7700X SoC platform hardware.
 
