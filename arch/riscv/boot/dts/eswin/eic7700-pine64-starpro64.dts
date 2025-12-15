@@ -512,7 +512,7 @@
 	rst-gpios = <&portc 30 GPIO_ACTIVE_LOW>;
 	eswin,rgmiisel = <&pinctrl 0x290 0x3>;
 	eswin,led-cfgs = <0x6100 0xa40 0x420>;
-	dly-param-1000m = <0x23232323 0x80068023 0x06060606>;
+	dly-param-1000m = <0x2e2e2e2e 0x800a802e 0x0a0a0a0a>;
 	dly-param-100m = <0x50505050 0x803f8050 0x3f3f3f3f>;
 	dly-param-10m = <0 0 0>;
 	status = "okay";
@@ -524,7 +524,7 @@
 	rst-gpios = <&porta 16 GPIO_ACTIVE_LOW>;
 	eswin,rgmiisel = <&pinctrl 0x294 0x3>;
 	eswin,led-cfgs = <0x6100 0xa40 0x420>;
-	dly-param-1000m = <0x25252525 0x80268025 0x26262626>;
+	dly-param-1000m = <0x2d2d2d2d 0x802f802d 0x2f2f2f2f>;
 	dly-param-100m = <0x48484848 0x80588048 0x58585858>;
 	dly-param-10m = <0 0 0>;
 	status = "okay";
