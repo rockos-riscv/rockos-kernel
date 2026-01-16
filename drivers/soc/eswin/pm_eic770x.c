@@ -44,11 +44,8 @@ static int eic770x_system_suspend(unsigned long sleep_type,
 
 static int eic770x_system_suspend_enter(suspend_state_t state)
 {
-	int ret;
-
 	pr_info("[%s %d]:\n",__func__,__LINE__);
 	/*
-		/*
 		Add codes that need to be performed for pm_enter. such as:
 			1.map the wakeup irq to mailbox box irq
 			2.notify the lpcpu to enter self refresh

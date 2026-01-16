@@ -268,12 +268,8 @@ static int eswin_lpcpu_probe(struct platform_device *pdev)
 {
 	struct device *dev = &pdev->dev;
 	const char *mbox_channel_name;
-	const struct firmware *lpcpu_fw;
 	int numa_id = 0;
 	int ret;
-	struct device_node *node;
-	struct resource res_fw;
-	void __iomem *mem_fw;
 	long timeout;
 
 	lpcpu = devm_kzalloc(dev, sizeof(*lpcpu), GFP_KERNEL);

@@ -708,7 +708,7 @@ static int eswin_fan_control_probe(struct platform_device *pdev)
 			state.duty_cycle = 50;
 		}
 	}
-	dev_err(&pdev->dev, "state.period: %d state.duty_cycle: %d\n",
+	dev_err(&pdev->dev, "state.period: %llu state.duty_cycle: %llu\n",
 			state.period,state.duty_cycle);
 	ret = pwm_apply_might_sleep(ctl->pwm, &state);
 	if (ret) {

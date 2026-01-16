@@ -210,14 +210,6 @@ static int dw_spi_alpine_init(struct platform_device *pdev,
 	return 0;
 }
 
-static int dw_spi_eswin_init(struct platform_device *pdev,
-			    struct dw_spi_mmio *dwsmmio)
-{
-	dw_spi_dma_setup_generic(&dwsmmio->dws);
-
-	return 0;
-}
-
 static int dw_spi_pssi_init(struct platform_device *pdev,
 			    struct dw_spi_mmio *dwsmmio)
 {

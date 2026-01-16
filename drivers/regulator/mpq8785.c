@@ -1067,10 +1067,6 @@ int mpq8785_regulator_enable(struct regulator_dev *rdev)
 {
 	struct i2c_client *client = to_i2c_client(rdev->dev.parent);
 	struct MPQ8785_DRIVER_DATA *data = i2c_get_clientdata(client);
-	u32 set_value = 0;
-	u32 get_value = 0;
-	int count = 0;
-	int ret;
 
 	dev_dbg(&rdev->dev, "%s.%d\n", __FUNCTION__, __LINE__);
 	return mpq8785_enable(&rdev->dev,data,  MPQ8785_MASK_OPERATION_ENABLE);

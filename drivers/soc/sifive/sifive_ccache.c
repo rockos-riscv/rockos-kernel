@@ -316,7 +316,7 @@ void ccache_flush_all(void *arg)
 	hartid_mask = *(int *)arg;
 	hartid = cpuid_to_hartid_map(smp_processor_id());
 	if ((BIT(hartid) &  hartid_mask) == 0) {
-		pr_err("%s:%d, invalid para!!!, current hartid_to_mask:%d, hartid_mask:%d\n", __func__, __LINE__,
+		pr_err("%s:%d, invalid para!!!, current hartid_to_mask:%zu, hartid_mask:%d\n", __func__, __LINE__,
 			BIT(hartid), hartid_mask);
 		return;
 	}
